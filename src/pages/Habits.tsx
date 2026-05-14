@@ -74,11 +74,12 @@ export function HabitsScreen() {
   const toggleSlot = (idx: number) => {
     if (!selectedHabit) return;
     const cycleKey = getCycleKey(selectedHabit);
-    const record = [...ensureCycleRecord(selectedHabit.id, cycleKey)];
-    record[idx] = !record[idx];
     
-    const newDb = { ...db };
-    newDb.habits.records[selectedHabit.id][cycleKey] = record;
+    const newDb = JSON.parse(JSON.stringify(db)); // Deep copy to be safe
+    if (!newDb.habits.records[selectedHabit.id]) newDb.habits.records[selectedHabit.id] = {};
+    if (!newDb.habits.records[selectedHabit.id][cycleKey]) newDb.habits.records[selectedHabit.id][cycleKey] = Array(10).fill(false);
+    
+    newDb.habits.records[selectedHabit.id][cycleKey][idx] = !newDb.habits.records[selectedHabit.id][cycleKey][idx];
     updateDb(newDb);
   };
 

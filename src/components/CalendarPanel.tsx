@@ -4,7 +4,7 @@ import { ymd, parseYMD, getMatchingRecurringTasks } from '../lib/utils';
 import { Button } from './ui/Button';
 
 export function CalendarPanel() {
-  const { db, selectedDate, setSelectedDate, calendarMonth, setCalendarMonth } = useAppStore();
+  const { db, selectedDate, setSelectedDate, calendarMonth, setCalendarMonth, getCombinedActivities } = useAppStore();
   const [collapsed, setCollapsed] = useState(false);
 
   const y = calendarMonth.getFullYear();
@@ -32,10 +32,7 @@ export function CalendarPanel() {
     const isSel = (curKey === ymd(selectedDate));
     const isToday = (curKey === ymd(new Date()));
 
-    const dayData = db.days[curKey];
-    const recurring = getMatchingRecurringTasks(curKey, db.recurringTasks?.list || []);
-    const localActs = dayData?.activities || [];
-    const allActs = [...localActs, ...recurring];
+    const allActs = getCombinedActivities(curKey);
     const isDdl = allActs.some(a => a.isDeadline);
 
     cells.push({ cur, curKey, inMonth, isSel, isToday, isDdl, acts: allActs.slice(0, 6) });

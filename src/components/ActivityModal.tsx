@@ -31,6 +31,8 @@ export function ActivityModal({ isOpen, onClose, initialRange, editingIndex }: A
   const [manageModalOpen, setManageModalOpen] = useState(false);
 
   useEffect(() => {
+    if (!isOpen) return; // Only process when modal opens
+
     if (editingIndex != null && acts[editingIndex]) {
       const seg = acts[editingIndex];
       setStart(minToTime(seg.startMin));
@@ -52,7 +54,8 @@ export function ActivityModal({ isOpen, onClose, initialRange, editingIndex }: A
       setIsDeadline(false);
       setFrequency('daily');
     }
-  }, [editingIndex, initialRange, acts, db.recurringTasks]);
+    // We only want to initialize the form when it opens or editing index changes
+  }, [editingIndex, initialRange, isOpen]);
 
   const handleSave = () => {
     const s = timeToMin(start);
@@ -97,21 +100,23 @@ export function ActivityModal({ isOpen, onClose, initialRange, editingIndex }: A
     } else {
       const editingAct = editingIndex !== null ? acts[editingIndex] : null;
       const segId = editingAct?.id || Math.random().toString(36).substring(2, 9);
-      const seg: ActivitySegment = { id: segId, startMin: s, endMin: e, label: label.trim(), typeId, isDeadline };
+      const seg: ActivitySegment = { 
+        id: segId, 
+        startMin: s, 
+        endMin: e, 
+        label: label.trim(), 
+        typeId, 
+        isDeadline,
+        recurringId: editingAct?.isRecurring ? editingAct.recurringId : undefined 
+      };
 
       if (editingAct) {
-        if (editingAct.isRecurring) {
-          // If we're converting a recurring task to normal, remove it from recurringTasks list
-          if (newDb.recurringTasks) {
-             const rtId = editingAct.recurringId;
-             newDb.recurringTasks.list = newDb.recurringTasks.list.filter(t => t.id !== rtId);
-          }
-          newActs.push(seg);
+        // Update normal task or create an instance override for a recurring task
+        const normIdx = newActs.findIndex(a => a.id === editingAct.id || (a.startMin === editingAct.startMin && a.endMin === editingAct.endMin && a.label === editingAct.label));
+        if (normIdx >= 0) {
+          newActs[normIdx] = seg;
         } else {
-          // Update normal task
-          const normIdx = newActs.findIndex(a => a.id === editingAct.id || (a.startMin === editingAct.startMin && a.endMin === editingAct.endMin && a.label === editingAct.label));
-          if(normIdx >= 0) newActs[normIdx] = seg;
-          else newActs.push(seg);
+          newActs.push(seg);
         }
       } else {
         newActs.push(seg);
