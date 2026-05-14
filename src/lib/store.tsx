@@ -1,9 +1,24 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { Database, DayData, Habit } from "./types";
+import { Database, DayData, Habit, AiPersona } from "./types";
 import { nowYMD } from "./utils";
 
 const STORAGE_KEY = "dailyTrackerData_v3";
 const THEME_KEY = "dailyTrackerTheme_v1";
+
+export const DEFAULT_PERSONAS: AiPersona[] = [
+  { id: 'p1', name: '时间管理大师', prompt: '你是一个严格的时间管理大师，善于分析用户的时间开销，并给出高效的日程规划建议。' },
+  { id: 'p2', name: '严格督导', prompt: '你是一个极其严格的督导，不喜欢听到借口，会严厉指出用户的摸鱼行为，并督促他们立刻行动。' },
+  { id: 'p3', name: '温柔倾听者', prompt: '你是一个温柔、充满同理心的倾听者。不管用户遇到什么挫折，你都会给予鼓励和情感上的支持。' },
+  { id: 'p4', name: '数据分析专家', prompt: '你是一个客观的数据分析专家。只看数据说话，根据图表和统计给出理性、有逻辑的分析和提升结论。' },
+  { id: 'p5', name: '佛系生活家', prompt: '你倡导Work-Life Balance，不鼓励内卷，如果用户压力太大，你会建议他们放下工作去休息和享受生活。' }
+];
+
+export const DEFAULT_PROMPTS = [
+  "帮我分析一下今天的打卡情况",
+  "明天该怎么安排比较好？",
+  "我最近总是失眠，怎么办？",
+  "鼓励我一下！"
+];
 
 interface AppState {
   db: Database;
@@ -33,6 +48,11 @@ function getDefaultDb(): Database {
         { id: "life", name: "生活", color: "#ffcc66", created: nowYMD() },
       ],
     },
+    aiChats: {
+      sessions: [],
+      activeSessionId: null,
+      config: { apiKey: '', model: 'gemini-2.5-flash', persona: '', personaId: 'p1', customPersonas: DEFAULT_PERSONAS, provider: 'gemini', quickPrompts: DEFAULT_PROMPTS }
+    }
   };
 }
 
@@ -45,6 +65,19 @@ function loadDB(): Database {
     parsed.habits.list ||= [];
     parsed.habits.records ||= {};
     parsed.taskTypes ||= { list: [] };
+    parsed.aiChats ||= getDefaultDb().aiChats;
+    
+    // Migration for personas
+    if (!parsed.aiChats.config.customPersonas) {
+      parsed.aiChats.config.customPersonas = DEFAULT_PERSONAS;
+    }
+    if (!parsed.aiChats.config.personaId) {
+      const match = parsed.aiChats.config.customPersonas.find((p: AiPersona) => p.name === parsed.aiChats.config.persona);
+      parsed.aiChats.config.personaId = match ? match.id : 'p1';
+    }
+    if (!parsed.aiChats.config.quickPrompts) {
+      parsed.aiChats.config.quickPrompts = DEFAULT_PROMPTS;
+    }
 
     if (!parsed.taskTypes.list.length) {
       parsed.taskTypes.list = getDefaultDb().taskTypes.list;

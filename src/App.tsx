@@ -9,11 +9,14 @@ import { PomodoroScreen } from './pages/Pomodoro';
 import { SleepScreen } from './pages/Sleep';
 import { StatsScreen } from './pages/Stats';
 import { DiaryScreen } from './pages/Diary';
+import { AiCoach } from './pages/AiCoach';
 import { DataModal } from './components/DataModal';
+
+import { AutoSync } from './components/AutoSync';
 
 function AppContent() {
   const { theme, setTheme, selectedDate, db } = useAppStore();
-  const [activeTab, setActiveTab] = useState<'home' | 'habits' | 'pomodoro' | 'sleep' | 'stats' | 'diary'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'habits' | 'pomodoro' | 'sleep' | 'stats' | 'diary' | 'ai'>('home');
   const [dataModalOpen, setDataModalOpen] = useState(false);
 
   // Logo state logic
@@ -36,6 +39,7 @@ function AppContent() {
     { id: 'sleep', label: '起床与睡觉' },
     { id: 'stats', label: '任务统计' },
     { id: 'diary', label: '日记' },
+    { id: 'ai', label: 'AI 教练' },
   ] as const;
 
   return (
@@ -80,7 +84,10 @@ function AppContent() {
         {activeTab === 'sleep' && <SleepScreen />}
         {activeTab === 'stats' && <StatsScreen />}
         {activeTab === 'diary' && <DiaryScreen />}
+        {activeTab === 'ai' && <AiCoach />}
       </main>
+
+      <AutoSync />
 
       {dataModalOpen && <DataModal onClose={() => setDataModalOpen(false)} />}
     </div>

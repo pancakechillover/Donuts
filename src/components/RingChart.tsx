@@ -132,18 +132,43 @@ export function RingChart() {
     }
 
     // 中心文本
-    const dateStr = `${selectedDate.getFullYear()}年${String(selectedDate.getMonth() + 1).padStart(2, "0")}月${String(selectedDate.getDate()).padStart(2, "0")}日`;
-    ctx.fillStyle = theme === 'light' ? "rgba(19,25,39,.92)" : "rgba(233,238,252,.92)";
-    ctx.font = `700 22px ui-sans-serif, system-ui, sans-serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(dateStr, cx, cy - 16);
-    
-    if (isToday) {
-      const now = new Date();
-      const timeStr = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-      ctx.font = `700 18px ui-sans-serif, system-ui, sans-serif`;
-      ctx.fillText(timeStr, cx, cy + 12);
+
+    if (dragPreview) {
+      const { startMin, endMin } = dragPreview;
+      const sH = Math.floor(startMin / 60);
+      const sM = startMin % 60;
+      const eH = Math.floor(endMin / 60);
+      const eM = endMin % 60;
+      const timeStr = `${String(sH).padStart(2, "0")}:${String(sM).padStart(2, "0")} - ${String(eH).padStart(2, "0")}:${String(eM).padStart(2, "0")}`;
+      
+      const dur = endMin - startMin;
+      const dH = Math.floor(dur / 60);
+      const dM = dur % 60;
+      let durStr = "";
+      if (dH > 0) durStr += `${dH}小时`;
+      if (dM > 0 || dH === 0) durStr += `${dM}分钟`;
+
+      ctx.fillStyle = theme === 'light' ? "rgba(19,25,39,.92)" : "rgba(233,238,252,.92)";
+      ctx.font = `700 20px ui-sans-serif, system-ui, sans-serif`;
+      ctx.fillText(timeStr, cx, cy - 12);
+      
+      ctx.fillStyle = theme === 'light' ? "rgba(19,25,39,.6)" : "rgba(233,238,252,.6)";
+      ctx.font = `500 14px ui-sans-serif, system-ui, sans-serif`;
+      ctx.fillText(durStr, cx, cy + 14);
+    } else {
+      const dateStr = `${selectedDate.getFullYear()}年${String(selectedDate.getMonth() + 1).padStart(2, "0")}月${String(selectedDate.getDate()).padStart(2, "0")}日`;
+      ctx.fillStyle = theme === 'light' ? "rgba(19,25,39,.92)" : "rgba(233,238,252,.92)";
+      ctx.font = `700 22px ui-sans-serif, system-ui, sans-serif`;
+      ctx.fillText(dateStr, cx, cy - 16);
+      
+      if (isToday) {
+        const now = new Date();
+        const timeStr = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+        ctx.font = `700 18px ui-sans-serif, system-ui, sans-serif`;
+        ctx.fillText(timeStr, cx, cy + 12);
+      }
     }
   }, [acts, dragPreview, selectedDate, theme, isToday, typeMap]);
 

@@ -1,0 +1,19 @@
+{
+  "name": "时光甜甜圈 (TimeDonut)",
+  "short_name": "TimeDonut",
+  "description": "一个集规划、番茄钟、日记、睡眠追踪于一体的高颜值习惯养成应用。",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "theme_color": "#0f172a",
+  "background_color": "#0f172a",
+  "display": "standalone",
+  "orientation": "portrait",
+  "start_url": ".",
+  "scope": "/"
+}

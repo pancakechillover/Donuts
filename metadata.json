@@ -1,6 +1,8 @@
 {
-  "name": "",
-  "description": "",
+  "name": "时光甜甜圈 (TimeDonut)",
+  "description": "一个集规划、番茄钟、日记、睡眠追踪于一体的高颜值习惯养成应用，采用 PWA 技术封装，并具备强大的数据同步与时间图表功能。",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

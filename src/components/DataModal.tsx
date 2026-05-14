@@ -12,13 +12,18 @@ export function DataModal({ onClose }: DataModalProps) {
   const { db, updateDb, clearLocalData } = useAppStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [webdavUrl, setWebdavUrl] = useState(() => localStorage.getItem('syncWebdavUrl') || 'https://dav.jianguoyun.com/dav/');
   const [username, setUsername] = useState(() => localStorage.getItem('syncUser') || '');
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState(() => localStorage.getItem('syncPassword') || '');
+  const [autoSync, setAutoSync] = useState(() => localStorage.getItem('syncAuto') === 'true');
   const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
+    localStorage.setItem('syncWebdavUrl', webdavUrl);
     localStorage.setItem('syncUser', username);
-  }, [username]);
+    localStorage.setItem('syncPassword', password);
+    localStorage.setItem('syncAuto', autoSync.toString());
+  }, [webdavUrl, username, password, autoSync]);
 
   const handleExport = () => {
     const backupJson = JSON.stringify(db, null, 2);
@@ -73,13 +78,13 @@ export function DataModal({ onClose }: DataModalProps) {
   };
 
   const handleSyncPull = async () => {
-    if (!username || !password) return alert("请输入同步账号和密码");
+    if (!webdavUrl || !username || !password) return alert("请输入 WebDAV 地址、账号和应用密码");
     setIsSyncing(true);
     try {
       const res = await fetch('/api/sync/pull', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ webdavUrl, username, password })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || '拉取失败');
@@ -97,10 +102,11 @@ export function DataModal({ onClose }: DataModalProps) {
   };
 
   const handleSyncPush = async (force: boolean = false) => {
-    if (!username || !password) return alert("请输入同步账号和密码");
+    if (!webdavUrl || !username || !password) return alert("请输入 WebDAV 地址、账号和应用密码");
     setIsSyncing(true);
     try {
       const payload = {
+        webdavUrl,
         username,
         password,
         data: db,
@@ -132,14 +138,14 @@ export function DataModal({ onClose }: DataModalProps) {
   };
 
   const handleCancelSync = async () => {
-    if (!username || !password) return alert("请输入同步账号和密码");
+    if (!webdavUrl || !username || !password) return alert("请输入 WebDAV 地址、账号和应用密码");
     if (!confirm("这将会清空云端服务器上保存的该账号数据。确认执行？")) return;
     setIsSyncing(true);
     try {
       const res = await fetch('/api/sync/clear', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ webdavUrl, username, password })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || '取消失败');
@@ -160,27 +166,34 @@ export function DataModal({ onClose }: DataModalProps) {
       <div className="flex flex-col gap-5">
         <div className="flex flex-col gap-2">
           <div className="pb-1 border-b border-[var(--line)]">
-            <h2 className="text-[13px] font-bold m-0">云端同步（基于 Redis）</h2>
-            <div className="text-xs text-[var(--muted)]">多端漫游与冲突检查</div>
+            <h2 className="text-[13px] font-bold m-0">云端同步（WebDAV）</h2>
+            <div className="text-xs text-[var(--muted)]">例如坚果云（会自动创建 TIMEDONUTS 文件夹）</div>
           </div>
           <div className="flex flex-col gap-3 mt-1">
+            <input 
+              type="text" 
+              placeholder="WebDAV 地址 (例如：https://dav.jianguoyun.com/dav/)" 
+              className="px-3 py-2 text-sm border border-[var(--line)] rounded-md bg-[var(--panel2)] outline-none"
+              value={webdavUrl}
+              onChange={e => setWebdavUrl(e.target.value)}
+            />
             <div className="flex gap-2">
               <input 
                 type="text" 
-                placeholder="同步账号 (例如：my_user)" 
+                placeholder="同步账号 (例如你的邮箱)" 
                 className="flex-1 px-3 py-2 text-sm border border-[var(--line)] rounded-md bg-[var(--panel2)] outline-none"
                 value={username}
                 onChange={e => setUsername(e.target.value)}
               />
               <input 
                 type="password" 
-                placeholder="核验密码" 
+                placeholder="应用密码" 
                 className="flex-[0.8] px-3 py-2 text-sm border border-[var(--line)] rounded-md bg-[var(--panel2)] outline-none"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
               />
             </div>
-            <div className="flex gap-2 flex-wrap text-sm">
+            <div className="flex gap-2 flex-wrap text-sm items-center">
               <Button variant="primary" onClick={() => handleSyncPush()} disabled={isSyncing}>
                 {isSyncing ? '同步中...' : '↑ 推送覆盖云端'}
               </Button>
@@ -188,8 +201,17 @@ export function DataModal({ onClose }: DataModalProps) {
                 ↓ 拉取覆盖本地
               </Button>
               <Button variant="danger" onClick={() => handleCancelSync()} disabled={isSyncing}>
-                ✕ 取消并清空云端
+                ✕ 清空云端数据
               </Button>
+              <label className="flex items-center gap-1.5 ml-1 cursor-pointer text-xs select-none">
+                <input 
+                  type="checkbox" 
+                  className="w-3.5 h-3.5 accent-[var(--accent)]" 
+                  checked={autoSync} 
+                  onChange={e => setAutoSync(e.target.checked)} 
+                />
+                自动上传修改
+              </label>
             </div>
           </div>
         </div>

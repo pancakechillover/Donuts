@@ -45,6 +45,36 @@ export interface Habit {
   created: string; // YYYY-MM-DD
 }
 
+export interface ChatMessage {
+  role: 'user' | 'model';
+  text: string;
+}
+
+export interface ChatSession {
+  id: string;
+  title: string;
+  messages: ChatMessage[];
+  updatedAt: number;
+}
+
+export interface AiPersona {
+  id: string;
+  name: string;
+  prompt: string;
+}
+
+export interface AiConfig {
+  apiKey: string;
+  model: string;
+  persona: string; // Keep for fallback name if personaId not found
+  personaId?: string;
+  personas?: AiPersona[]; // Deprecated, but keeping for compatibility if previously used
+  customPersonas?: AiPersona[];
+  provider: 'gemini' | 'openai-compatible';
+  baseUrl?: string;
+  quickPrompts?: string[];
+}
+
 export interface Database {
   days: Record<string, DayData>;
   habits: {
@@ -53,5 +83,10 @@ export interface Database {
   };
   taskTypes: {
     list: TaskType[];
+  };
+  aiChats: {
+    sessions: ChatSession[];
+    activeSessionId: string | null;
+    config: AiConfig;
   };
 }
