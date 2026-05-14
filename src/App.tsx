@@ -53,7 +53,7 @@ function AppContent() {
           <div className="flex items-center gap-2.5">
             <div className={logoClasses}>{selectedDate.getDate()}号</div>
             <div>
-              <h1 className="text-sm m-0 tracking-wide font-bold">个人记录面板</h1>
+              <h1 className="text-sm m-0 tracking-wide font-bold">TimeDonut</h1>
               <div className="text-xs text-[var(--muted)]">
                 {isToday ? `今日：${selYMD}` : isFuture ? `未来：${selYMD}` : `历史：${selYMD}`}
               </div>

@@ -67,10 +67,11 @@ export function ActivityModal({ isOpen, onClose, initialRange, editingIndex }: A
     const newDb = { ...db };
     const newActs = [...todaysData.activities];
 
+    const editingAct = editingIndex !== null ? acts[editingIndex] : null;
+
     if (isRecurring) {
       if (!newDb.recurringTasks) newDb.recurringTasks = { list: [] };
       
-      const editingAct = editingIndex !== null ? acts[editingIndex] : null;
       const rtId = editingAct?.recurringId || Math.random().toString(36).substring(2, 9);
       
       const rtList = [...newDb.recurringTasks.list];
@@ -98,7 +99,13 @@ export function ActivityModal({ isOpen, onClose, initialRange, editingIndex }: A
          if(normIdx >= 0) newActs.splice(normIdx, 1);
       }
     } else {
-      const editingAct = editingIndex !== null ? acts[editingIndex] : null;
+      // If we unchecked recurring, and it was originally recurring, remove the global rule
+      if (editingAct?.isRecurring && editingAct.recurringId) {
+        if (newDb.recurringTasks) {
+          newDb.recurringTasks.list = newDb.recurringTasks.list.filter(t => t.id !== editingAct.recurringId);
+        }
+      }
+
       const segId = editingAct?.id || Math.random().toString(36).substring(2, 9);
       const seg: ActivitySegment = { 
         id: segId, 
@@ -107,11 +114,12 @@ export function ActivityModal({ isOpen, onClose, initialRange, editingIndex }: A
         label: label.trim(), 
         typeId, 
         isDeadline,
-        recurringId: editingAct?.isRecurring ? editingAct.recurringId : undefined 
+        isRecurring: false,
+        recurringId: undefined
       };
 
       if (editingAct) {
-        // Update normal task or create an instance override for a recurring task
+        // Update normal task
         const normIdx = newActs.findIndex(a => a.id === editingAct.id || (a.startMin === editingAct.startMin && a.endMin === editingAct.endMin && a.label === editingAct.label));
         if (normIdx >= 0) {
           newActs[normIdx] = seg;
@@ -221,34 +229,44 @@ export function ActivityModal({ isOpen, onClose, initialRange, editingIndex }: A
           </div>
         </div>
 
-        <div className="mt-2 p-3 bg-[var(--panel2)] border border-[var(--line)] rounded-xl flex flex-col gap-3">
-          <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
-            <input 
-              type="checkbox" 
-              className="w-4 h-4 rounded border-[var(--line)] text-[var(--accent)] focus:ring-[var(--accent)]"
-              checked={isRecurring}
-              onChange={e => setIsRecurring(e.target.checked)}
-            />
-            设为循环出现
-          </label>
+        <div className="mt-2 p-3 bg-[var(--panel2)] border border-[var(--line)] rounded-xl flex flex-col gap-4">
+          <div 
+            className="flex items-center justify-between gap-3 p-2 rounded-lg hover:bg-[var(--panel)] cursor-pointer transition-colors"
+            onClick={() => setIsRecurring(!isRecurring)}
+          >
+            <div className="flex flex-col">
+              <span className="text-sm font-bold">设为循环出现</span>
+              <span className="text-[11px] text-[var(--muted)]">任务会在所选频次自动生成</span>
+            </div>
+            <div className={`w-11 h-6 rounded-full relative transition-colors ${isRecurring ? 'bg-[var(--accent)]' : 'bg-gray-400'}`}>
+              <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${isRecurring ? 'translate-x-5' : ''}`}></div>
+            </div>
+          </div>
 
-          <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
-            <input 
-              type="checkbox" 
-              className="w-4 h-4 rounded border-[var(--line)] text-[var(--accent)] focus:ring-[var(--accent)]"
-              checked={isDeadline}
-              onChange={e => setIsDeadline(e.target.checked)}
-            />
-            设为截止日期 (DDL)
-          </label>
+          <div 
+            className="flex items-center justify-between gap-3 p-2 rounded-lg hover:bg-[var(--panel)] cursor-pointer transition-colors"
+            onClick={() => setIsDeadline(!isDeadline)}
+          >
+            <div className="flex flex-col">
+              <span className="text-sm font-bold">设为截止日期 (DDL)</span>
+              <span className="text-[11px] text-[var(--muted)]">该日期在日历中会以红色标出</span>
+            </div>
+            <div className={`w-11 h-6 rounded-full relative transition-colors ${isDeadline ? 'bg-red-500' : 'bg-gray-400'}`}>
+              <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${isDeadline ? 'translate-x-5' : ''}`}></div>
+            </div>
+          </div>
 
           {isRecurring && (
-            <div className="flex items-center gap-3 pl-6">
-              <span className="text-xs text-[var(--muted)]">循环频次:</span>
+            <div className="flex items-center gap-3 pl-2 py-2 border-t border-[var(--line)] mt-1 animate-in fade-in slide-in-from-top-1">
+              <span className="text-xs text-[var(--muted)] shrink-0">循环方案:</span>
               <select 
                 className="flex-1 p-2 bg-[var(--panel)] border border-[var(--line)] rounded-md text-sm outline-none"
                 value={frequency}
-                onChange={e => setFrequency(e.target.value as any)}
+                onChange={e => {
+                  e.stopPropagation();
+                  setFrequency(e.target.value as any);
+                }}
+                onClick={e => e.stopPropagation()}
               >
                 <option value="daily">每天 (Daily)</option>
                 <option value="weekly">每周 (Weekly)</option>

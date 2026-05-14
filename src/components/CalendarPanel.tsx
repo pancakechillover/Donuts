@@ -76,7 +76,7 @@ export function CalendarPanel() {
               {cells.map((cell, idx) => (
                 <div 
                   key={idx} 
-                  className={`relative border border-[var(--line)] bg-[color-mix(in_srgb,var(--panel2)_62%,transparent)] rounded-xl p-1.5 flex flex-col gap-1.5 min-h-[56px] cursor-pointer select-none transition-all duration-150 hover:scale-[1.03] hover:z-10 hover:shadow-lg hover:border-[var(--accent)] active:scale-95 ${!cell.inMonth ? 'opacity-40 grayscale-[0.5]' : ''} ${cell.isSel ? 'border-[var(--accent)] bg-[color-mix(in_srgb,var(--accent)_12%,var(--panel2))] ring-2 ring-[var(--accent)] ring-opacity-20' : ''} ${cell.isToday ? 'outline outline-2 outline-[#46d39a66] outline-offset-1' : ''} ${cell.isDdl ? 'bg-[color-mix(in_srgb,red,transparent_90%)] border-[rgba(239,68,68,0.5)]' : ''}`}
+                  className={`relative border border-[var(--line)] bg-[color-mix(in_srgb,var(--panel2)_62%,transparent)] rounded-xl p-1.5 flex flex-col gap-1.5 min-h-[56px] cursor-pointer select-none transition-all duration-150 hover:scale-[1.03] hover:z-10 hover:shadow-lg hover:border-[var(--accent)] active:scale-95 ${!cell.inMonth ? 'opacity-40 grayscale-[0.5]' : ''} ${cell.isSel ? 'border-[var(--accent)] bg-[color-mix(in_srgb,var(--accent)_12%,var(--panel2))] ring-2 ring-[var(--accent)] ring-opacity-20' : ''} ${cell.isToday ? 'outline outline-2 outline-[#46d39a66] outline-offset-1' : ''} ${cell.isDdl ? 'bg-red-50/50 dark:bg-red-950/20 border-red-300 dark:border-red-900/50 shadow-[inset_0_0_12px_rgba(239,68,68,0.05)]' : ''}`}
                   onClick={() => {
                     setSelectedDate(cell.cur);
                     if (!cell.inMonth) {
