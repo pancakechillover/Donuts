@@ -25,6 +25,7 @@ export function ActivityModal({ isOpen, onClose, initialRange, editingIndex }: A
   const [label, setLabel] = useState("");
   const [typeId, setTypeId] = useState("uncat");
   const [isRecurring, setIsRecurring] = useState(false);
+  const [isDeadline, setIsDeadline] = useState(false);
   const [frequency, setFrequency] = useState<'daily'|'weekly'|'monthly'|'yearly'>('daily');
 
   const [manageModalOpen, setManageModalOpen] = useState(false);
@@ -37,6 +38,7 @@ export function ActivityModal({ isOpen, onClose, initialRange, editingIndex }: A
       setLabel(seg.label);
       setTypeId(seg.typeId);
       setIsRecurring(!!seg.isRecurring);
+      setIsDeadline(!!seg.isDeadline);
       if (seg.isRecurring && seg.recurringId && db.recurringTasks?.list) {
         const rt = db.recurringTasks.list.find(t => t.id === seg.recurringId);
         if (rt) setFrequency(rt.frequency);
@@ -47,6 +49,7 @@ export function ActivityModal({ isOpen, onClose, initialRange, editingIndex }: A
       setLabel("");
       setTypeId("uncat");
       setIsRecurring(false);
+      setIsDeadline(false);
       setFrequency('daily');
     }
   }, [editingIndex, initialRange, acts, db.recurringTasks]);
@@ -78,7 +81,8 @@ export function ActivityModal({ isOpen, onClose, initialRange, editingIndex }: A
         label: label.trim(), 
         typeId, 
         frequency, 
-        startDate: existingRt ? existingRt.startDate : dateKey
+        startDate: existingRt ? existingRt.startDate : dateKey,
+        isDeadline
       };
       
       if (rtIdx >= 0) rtList[rtIdx] = rtObj;
@@ -93,7 +97,7 @@ export function ActivityModal({ isOpen, onClose, initialRange, editingIndex }: A
     } else {
       const editingAct = editingIndex !== null ? acts[editingIndex] : null;
       const segId = editingAct?.id || Math.random().toString(36).substring(2, 9);
-      const seg: ActivitySegment = { id: segId, startMin: s, endMin: e, label: label.trim(), typeId };
+      const seg: ActivitySegment = { id: segId, startMin: s, endMin: e, label: label.trim(), typeId, isDeadline };
 
       if (editingAct) {
         if (editingAct.isRecurring) {
@@ -221,6 +225,16 @@ export function ActivityModal({ isOpen, onClose, initialRange, editingIndex }: A
               onChange={e => setIsRecurring(e.target.checked)}
             />
             设为循环出现
+          </label>
+
+          <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+            <input 
+              type="checkbox" 
+              className="w-4 h-4 rounded border-[var(--line)] text-[var(--accent)] focus:ring-[var(--accent)]"
+              checked={isDeadline}
+              onChange={e => setIsDeadline(e.target.checked)}
+            />
+            设为截止日期 (DDL)
           </label>
 
           {isRecurring && (

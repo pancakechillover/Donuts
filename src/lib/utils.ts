@@ -37,7 +37,8 @@ export function getMatchingRecurringTasks(dateKey: string, tasks: RecurringTask[
       label: t.label,
       typeId: t.typeId,
       isRecurring: true,
-      recurringId: t.id
+      recurringId: t.id,
+      isDeadline: t.isDeadline
     }));
 }
 

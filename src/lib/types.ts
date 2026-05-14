@@ -13,6 +13,7 @@ export interface ActivitySegment {
   typeId: string;
   isRecurring?: boolean;
   recurringId?: string;
+  isDeadline?: boolean;
 }
 
 export interface PomodoroData {
@@ -92,6 +93,7 @@ export interface RecurringTask {
   typeId: string;
   frequency: 'daily' | 'weekly' | 'monthly' | 'yearly';
   startDate: string; // YYYY-MM-DD
+  isDeadline?: boolean;
 }
 
 export interface Database {

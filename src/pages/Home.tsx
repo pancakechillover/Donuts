@@ -65,6 +65,7 @@ export function HomeScreen() {
             <div className="flex justify-between items-baseline gap-2.5">
               <b className="text-[13px] font-bold truncate flex items-center gap-1.5">
                 {seg.isRecurring && <Repeat className="w-3 h-3 text-[var(--accent)]" />}
+                {seg.isDeadline && <span className="bg-red-500 text-white text-[9px] px-1 rounded-sm uppercase tracking-tighter">DDL</span>}
                 {seg.label || "未命名任务"}
               </b>
               <span className="text-[11px] font-mono whitespace-nowrap opacity-60">{fmtMinRange(seg.startMin, seg.endMin)}</span>
