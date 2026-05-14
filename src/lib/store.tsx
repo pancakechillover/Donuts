@@ -52,6 +52,13 @@ function getDefaultDb(): Database {
       sessions: [],
       activeSessionId: null,
       config: { apiKey: '', model: 'gemini-2.5-flash', persona: '', personaId: 'p1', customPersonas: DEFAULT_PERSONAS, provider: 'gemini', quickPrompts: DEFAULT_PROMPTS }
+    },
+    settings: {
+      timeline: {
+        morningStart: '06:00',
+        noonStart: '12:00',
+        eveningStart: '18:00'
+      }
     }
   };
 }
@@ -66,6 +73,13 @@ function loadDB(): Database {
     parsed.habits.records ||= {};
     parsed.taskTypes ||= { list: [] };
     parsed.aiChats ||= getDefaultDb().aiChats;
+    
+    if (!parsed.settings) {
+      parsed.settings = getDefaultDb().settings;
+    }
+    if (!parsed.settings.timeline) {
+      parsed.settings.timeline = getDefaultDb().settings!.timeline;
+    }
     
     // Migration for personas
     if (!parsed.aiChats.config.customPersonas) {

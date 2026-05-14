@@ -63,39 +63,60 @@ export function RingChart() {
     ctx.fill("evenodd");
 
     // 刻度
-    for (let hr = 0; hr < 24; hr++) {
-      const m = hr * 60;
+    for (let m = 0; m < 1440; m += 15) {
       const a = minToAngle(m);
-      const x1 = cx + Math.cos(a) * (inner - 6);
-      const y1 = cy + Math.sin(a) * (inner - 6);
-      const x2 = cx + Math.cos(a) * (outer + 2);
-      const y2 = cy + Math.sin(a) * (outer + 2);
-      const strong = (hr % 6 === 0);
+      const isHour = m % 60 === 0;
+      const hr = Math.floor(m / 60);
+      const strong = isHour && (hr % 6 === 0);
+      const medium = isHour && !strong;
       
-      ctx.strokeStyle = strong
-        ? (theme === 'light' ? "rgba(10,20,40,.22)" : "rgba(255,255,255,.26)")
-        : (theme === 'light' ? "rgba(10,20,40,.12)" : "rgba(255,255,255,.12)");
-      ctx.lineWidth = strong ? 2 : 1;
+      const tickInner = strong ? inner - 8 : (medium ? inner - 4 : inner - 2);
+      const tickOuter = strong ? outer + 4 : (medium ? outer + 2 : outer);
+      
+      const x1 = cx + Math.cos(a) * tickInner;
+      const y1 = cy + Math.sin(a) * tickInner;
+      const x2 = cx + Math.cos(a) * tickOuter;
+      const y2 = cy + Math.sin(a) * tickOuter;
+      
+      if (strong) {
+        ctx.strokeStyle = theme === 'light' ? "rgba(10,20,40,.25)" : "rgba(255,255,255,.3)";
+        ctx.lineWidth = 2.5;
+      } else if (medium) {
+        ctx.strokeStyle = theme === 'light' ? "rgba(10,20,40,.12)" : "rgba(255,255,255,.15)";
+        ctx.lineWidth = 1.5;
+      } else {
+        ctx.strokeStyle = theme === 'light' ? "rgba(10,20,40,.05)" : "rgba(255,255,255,.05)";
+        ctx.lineWidth = 1;
+      }
+      
       ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
 
-      if (hr % 3 === 0) {
-        const tx = cx + Math.cos(a) * (inner - 26);
-        const ty = cy + Math.sin(a) * (inner - 26);
-        ctx.fillStyle = theme === 'light' ? "rgba(19,25,39,.80)" : "rgba(233,238,252,.78)";
-        ctx.font = `500 12px ui-sans-serif, system-ui, sans-serif`;
+      if (isHour && (hr % 3 === 0)) {
+        const tx = cx + Math.cos(a) * (inner - 24);
+        const ty = cy + Math.sin(a) * (inner - 24);
+        ctx.fillStyle = theme === 'light' ? "rgba(19,25,39,.7)" : "rgba(233,238,252,.7)";
+        ctx.font = `600 11px ui-sans-serif, system-ui, sans-serif`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.fillText(String(hr), tx, ty);
+        ctx.fillText(String(hr).padStart(2, "0") + ":00", tx, ty);
       }
     }
 
     // 活动段
     acts.forEach(seg => {
-      const a1 = minToAngle(seg.startMin);
-      const a2 = minToAngle(seg.endMin);
+      let a1 = minToAngle(seg.startMin);
+      let a2 = minToAngle(seg.endMin);
+      
+      // 添加极小间距以区隔不同任务块
+      const margin = 0.01;
+      if ((a2 - a1) > margin * 2.5) {
+        a1 += margin;
+        a2 -= margin;
+      }
+
       ctx.beginPath();
-      ctx.arc(cx, cy, outer, a1, a2);
-      ctx.arc(cx, cy, inner, a2, a1, true);
+      ctx.arc(cx, cy, outer - 2, a1, a2);
+      ctx.arc(cx, cy, inner + 2, a2, a1, true);
       ctx.closePath();
       ctx.fillStyle = typeMap.get(seg.typeId) || "#7aa2ff";
       ctx.globalAlpha = 0.86;
@@ -186,6 +207,7 @@ export function RingChart() {
   // Handle Drag
   const draggingRef = useRef(false);
   const dragStartRef = useRef<number | null>(null);
+  const dragHitIndexRef = useRef<number>(-1);
 
   const getAngle = (e: React.MouseEvent | React.TouchEvent | MouseEvent | TouchEvent) => {
     if (!canvasRef.current) return null;
@@ -222,7 +244,8 @@ export function RingChart() {
     let a = ang - (-Math.PI / 2);
     while (a < 0) a += Math.PI * 2;
     while (a >= Math.PI * 2) a -= Math.PI * 2;
-    return Math.round((a / (Math.PI * 2)) * 1440);
+    const min = Math.round((a / (Math.PI * 2)) * 1440);
+    return Math.round(min / 5) * 5;
   };
 
   const handlePointerDown = (e: React.MouseEvent | React.TouchEvent) => {
@@ -231,6 +254,11 @@ export function RingChart() {
     draggingRef.current = true;
     const min = angleToMin(ang);
     dragStartRef.current = min;
+    
+    // Check if clicking on an existing segment
+    const hitIndex = acts.findIndex(seg => min >= seg.startMin && min <= seg.endMin);
+    dragHitIndexRef.current = hitIndex;
+
     setDragPreview({ startMin: min, endMin: min });
   };
 
@@ -253,6 +281,15 @@ export function RingChart() {
       let end = dragPreview?.endMin || dragStartRef.current || 0;
       
       if (Math.abs(end - s) < 5) {
+        if (dragHitIndexRef.current !== -1) {
+          const act = acts[dragHitIndexRef.current];
+          setDragPreview(null);
+          setSelectedRange({ startMin: act.startMin, endMin: act.endMin });
+          setEditingIndex(dragHitIndexRef.current);
+          setModalOpen(true);
+          return;
+        }
+
         s = dragStartRef.current || 0;
         end = clamp(s + 30, 0, 1440);
       }

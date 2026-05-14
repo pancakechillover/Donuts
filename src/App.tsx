@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { AppStoreProvider, useAppStore } from './lib/store';
 import { Button } from './components/ui/Button';
 import { ymd } from './lib/utils';
+import { Home, CheckSquare, Clock, Moon, BarChart2, BookOpen, MessageCircle, Settings, Moon as MoonIcon, Sun } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+
 // Screens
 import { HomeScreen } from './pages/Home';
 import { HabitsScreen } from './pages/Habits';
@@ -33,17 +36,18 @@ function AppContent() {
   ].filter(Boolean).join(" ");
 
   const tabs = [
-    { id: 'home', label: '主页面' },
-    { id: 'habits', label: '习惯统计' },
-    { id: 'pomodoro', label: '番茄闹钟' },
-    { id: 'sleep', label: '起床与睡觉' },
-    { id: 'stats', label: '任务统计' },
-    { id: 'diary', label: '日记' },
-    { id: 'ai', label: 'AI 教练' },
+    { id: 'home', label: '主页', icon: Home },
+    { id: 'habits', label: '打卡', icon: CheckSquare },
+    { id: 'pomodoro', label: '专注', icon: Clock },
+    { id: 'sleep', label: '作息', icon: Moon },
+    { id: 'stats', label: '统计', icon: BarChart2 },
+    { id: 'diary', label: '日记', icon: BookOpen },
+    { id: 'ai', label: 'AI', icon: MessageCircle },
   ] as const;
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pb-20 md:pb-0">
+      {/* Top Header - hidden on mobile, visible on desktop */}
       <header className="sticky top-0 z-20 backdrop-blur-[14px] bg-[color-mix(in_srgb,var(--bg)_70%,transparent)] border-b border-[color-mix(in_srgb,var(--line)_90%,transparent)]">
         <div className="max-w-[1280px] mx-auto px-3.5 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
@@ -55,37 +59,90 @@ function AppContent() {
               </div>
             </div>
           </div>
-          <nav className="flex items-center gap-2 justify-end flex-wrap">
-            {tabs.map(tab => (
-              <div
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`border border-[var(--line)] px-2.5 py-2 rounded-full cursor-pointer text-xs select-none transition-all duration-140 hover:-translate-y-px ${
-                  activeTab === tab.id 
-                  ? 'border-[color-mix(in_srgb,var(--accent)_58%,var(--line))] bg-[color-mix(in_srgb,var(--accent)_14%,var(--panel2))]' 
-                  : 'bg-[color-mix(in_srgb,var(--panel2)_60%,transparent)] hover:bg-[color-mix(in_srgb,var(--panel2)_82%,transparent)]'
-                }`}
-              >
-                {tab.label}
-              </div>
-            ))}
+          
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center gap-2 justify-end flex-wrap">
+            {tabs.map(tab => {
+              const isActive = activeTab === tab.id;
+              return (
+                <div
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`border px-3 py-1.5 rounded-full cursor-pointer text-xs select-none flex items-center gap-1.5 transition-all duration-150
+                    ${isActive 
+                      ? 'border-[color-mix(in_srgb,var(--accent)_58%,var(--line))] bg-[color-mix(in_srgb,var(--accent)_14%,var(--panel2))] text-[var(--accent)]' 
+                      : 'border-[var(--line)] bg-[color-mix(in_srgb,var(--panel2)_60%,transparent)] hover:bg-[color-mix(in_srgb,var(--panel2)_82%,transparent)]'
+                    }`}
+                >
+                  <tab.icon className="w-3.5 h-3.5" />
+                  {tab.label}
+                </div>
+              );
+            })}
+            <div className="w-px h-6 bg-[var(--line)] mx-2"></div>
             <Button onClick={() => setDataModalOpen(true)} title="数据导入/导出与存档">💾 数据</Button>
             <Button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} title="切换日间/夜间">
               {theme === 'light' ? '🌙 夜间' : '☀️ 日间'}
             </Button>
           </nav>
+          
+          {/* Mobile Actions: Data & Theme */}
+          <div className="flex md:hidden items-center gap-2">
+            <button onClick={() => setDataModalOpen(true)} className="p-2 border border-[var(--line)] rounded-md shadow-sm">
+              <Settings className="w-4 h-4" />
+            </button>
+            <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="p-2 border border-[var(--line)] rounded-md shadow-sm">
+              {theme === 'light' ? <MoonIcon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
       </header>
 
-      <main className="max-w-[1280px] mx-auto p-3.5">
-        {activeTab === 'home' && <HomeScreen />}
-        {activeTab === 'habits' && <HabitsScreen />}
-        {activeTab === 'pomodoro' && <PomodoroScreen />}
-        {activeTab === 'sleep' && <SleepScreen />}
-        {activeTab === 'stats' && <StatsScreen />}
-        {activeTab === 'diary' && <DiaryScreen />}
-        {activeTab === 'ai' && <AiCoach />}
+      <main className="max-w-[1280px] mx-auto p-3.5 overflow-hidden">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 10, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.98 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+          >
+            {activeTab === 'home' && <HomeScreen />}
+            {activeTab === 'habits' && <HabitsScreen />}
+            {activeTab === 'pomodoro' && <PomodoroScreen />}
+            {activeTab === 'sleep' && <SleepScreen />}
+            {activeTab === 'stats' && <StatsScreen />}
+            {activeTab === 'diary' && <DiaryScreen />}
+            {activeTab === 'ai' && <AiCoach />}
+          </motion.div>
+        </AnimatePresence>
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="md:hidden fixed bottom-4 left-4 right-4 z-50 bg-[color-mix(in_srgb,var(--panel)_90%,transparent)] backdrop-blur-xl border border-[var(--line)] rounded-2xl shadow-xl p-2 flex items-center justify-around">
+        {tabs.map(tab => {
+          const isActive = activeTab === tab.id;
+          return (
+            <div
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className="flex flex-col items-center gap-1 p-2 flex-1 cursor-pointer select-none rounded-xl transition-all relative"
+            >
+              {isActive && (
+                <motion.div 
+                  layoutId="mobile-nav-indicator"
+                  className="absolute inset-0 bg-[color-mix(in_srgb,var(--accent)_10%,transparent)] rounded-xl"
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                />
+              )}
+              <tab.icon className={`w-5 h-5 z-10 transition-colors ${isActive ? 'text-[var(--accent)]' : 'text-[var(--muted)]'}`} />
+              <span className={`text-[10px] z-10 transition-colors ${isActive ? 'text-[var(--accent)] font-medium' : 'text-[var(--muted)]'}`}>
+                {tab.label}
+              </span>
+            </div>
+          );
+        })}
+      </nav>
 
       <AutoSync />
 

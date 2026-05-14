@@ -75,6 +75,12 @@ export interface AiConfig {
   quickPrompts?: string[];
 }
 
+export interface TimelineConfig {
+  morningStart: string; // HH:mm
+  noonStart: string;    // HH:mm
+  eveningStart: string; // HH:mm
+}
+
 export interface Database {
   days: Record<string, DayData>;
   habits: {
@@ -88,5 +94,8 @@ export interface Database {
     sessions: ChatSession[];
     activeSessionId: string | null;
     config: AiConfig;
+  };
+  settings?: {
+    timeline: TimelineConfig;
   };
 }

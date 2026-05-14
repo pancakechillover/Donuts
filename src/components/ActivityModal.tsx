@@ -95,6 +95,7 @@ export function ActivityModal({ isOpen, onClose, initialRange, editingIndex }: A
             <label className="text-xs text-[var(--muted)]">开始时间</label>
             <input 
               type="time" 
+              step="300"
               className="w-full mt-1.5 p-2.5 rounded-md border border-[var(--line)] bg-[var(--panel2)] text-[var(--text)] outline-none"
               value={start}
               onChange={e => setStart(e.target.value)}
@@ -104,6 +105,7 @@ export function ActivityModal({ isOpen, onClose, initialRange, editingIndex }: A
             <label className="text-xs text-[var(--muted)]">结束时间</label>
             <input 
               type="time" 
+              step="300"
               className="w-full mt-1.5 p-2.5 rounded-md border border-[var(--line)] bg-[var(--panel2)] text-[var(--text)] outline-none"
               value={end}
               onChange={e => setEnd(e.target.value)}

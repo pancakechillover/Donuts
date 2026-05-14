@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'motion/react';
 
 interface ModalProps {
   title: string;
@@ -9,8 +10,18 @@ interface ModalProps {
 
 export function Modal({ title, onClose, children, footer }: ModalProps) {
   return (
-    <div className="fixed inset-0 modal-backdrop flex items-center justify-center p-3.5 z-50">
-      <div 
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 modal-backdrop flex items-center justify-center p-3.5 z-50"
+      onClick={onClose}
+    >
+      <motion.div 
+        initial={{ y: 50, scale: 0.95, opacity: 0 }}
+        animate={{ y: 0, scale: 1, opacity: 1 }}
+        exit={{ y: 20, scale: 0.95, opacity: 0 }}
+        transition={{ type: "spring", stiffness: 350, damping: 25 }}
         className="w-full max-w-[640px] bg-[var(--panel)] border border-[var(--line)] rounded-[18px] shadow-[var(--shadow)] overflow-hidden flex flex-col max-h-full"
         onClick={(e) => e.stopPropagation()}
       >
@@ -26,7 +37,7 @@ export function Modal({ title, onClose, children, footer }: ModalProps) {
             {footer}
           </div>
         )}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

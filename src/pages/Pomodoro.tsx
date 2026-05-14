@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAppStore } from '../lib/store';
 import { Button } from '../components/ui/Button';
 import { ymd, parseYMD, clamp } from '../lib/utils';
 import { Modal } from '../components/ui/Modal';
 import { PomodoroChart } from '../components/PomodoroChart';
+import { motion } from 'motion/react';
+import { Play, Pause, Square, Clock } from 'lucide-react';
 
 export function PomodoroScreen() {
   const { db, selectedDate, setSelectedDate, getDayData, updateDayData } = useAppStore();
@@ -12,6 +14,72 @@ export function PomodoroScreen() {
 
   const [dateModalOpen, setDateModalOpen] = useState(false);
   const [datePickerVal, setDatePickerVal] = useState(dateKey);
+
+  // Timer State
+  const [timeLeft, setTimeLeft] = useState(25 * 60);
+  const [isActive, setIsActive] = useState(false);
+  const [mode, setMode] = useState<'work' | 'break'>('work');
+  const timerRef = useRef<any>(null);
+
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isActive && timeLeft > 0) {
+      timerRef.current = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
+    } else if (isActive && timeLeft === 0) {
+      setIsActive(false);
+      
+      const isWork = mode === 'work';
+      const title = isWork ? "🍅 专注完成！" : "🍩 休息结束！";
+      const body = isWork ? "甜甜圈出炉啦，休息一下吧！" : "准备好开始新的专注了吗？";
+      
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(title, { body, icon: '/vite.svg' });
+      }
+
+      if (isWork) {
+        const hour = new Date().getHours();
+        const part = hour < 14 ? 'morning' : (hour < 20 ? 'noon' : 'evening');
+        handleStep(part, 1);
+        setMode('break');
+        setTimeLeft(5 * 60);
+      } else {
+        setMode('work');
+        setTimeLeft(25 * 60);
+      }
+    }
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [isActive, timeLeft, mode]);
+
+  const toggleTimer = () => {
+    if (!isActive && 'Notification' in window && Notification.permission === 'default') {
+       Notification.requestPermission();
+    }
+    setIsActive(!isActive);
+  };
+  
+  const stopTimer = () => {
+    setIsActive(false);
+    setTimeLeft(mode === 'work' ? 25 * 60 : 5 * 60);
+  };
+
+  const switchMode = (newMode: 'work' | 'break') => {
+    setIsActive(false);
+    setMode(newMode);
+    setTimeLeft(newMode === 'work' ? 25 * 60 : 5 * 60);
+  };
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  };
 
   const handleStep = (part: 'morning' | 'noon' | 'evening', delta: number) => {
     updateDayData(dateKey, {
@@ -67,6 +135,54 @@ export function PomodoroScreen() {
 
   return (
     <div className="grid gap-3.5 mt-4">
+      
+      {/* Live Timer Section */}
+      <motion.div 
+        className="bg-gradient-to-br from-[var(--bg)] to-[var(--bg2)] border border-[var(--line)] rounded-[var(--radius)] shadow-[var(--shadow)] overflow-hidden flex flex-col items-center justify-center p-8"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+      >
+        <div className="flex gap-2 border border-[var(--line)] bg-[var(--panel2)] rounded-full p-1 mb-8 shadow-inner">
+          <div 
+            onClick={() => switchMode('work')}
+            className={`px-6 py-2 rounded-full text-sm font-bold cursor-pointer transition-all flex items-center gap-2 ${mode === 'work' ? 'bg-[var(--accent)] text-white shadow-md scale-105' : 'text-[var(--muted)] hover:text-[var(--text)]'}`}
+          >
+            <Clock className="w-4 h-4" /> 专注
+          </div>
+          <div 
+            onClick={() => switchMode('break')}
+            className={`px-6 py-2 rounded-full text-sm font-bold cursor-pointer transition-all flex items-center gap-2 ${mode === 'break' ? 'bg-[var(--good)] text-white shadow-md scale-105' : 'text-[var(--muted)] hover:text-[var(--text)]'}`}
+          >
+            休息 🍩
+          </div>
+        </div>
+
+        <div className="text-[80px] md:text-[110px] font-mono font-bold leading-none tracking-tighter mb-8 text-[var(--accent)]" style={{ fontVariantNumeric: 'tabular-nums' }}>
+          {formatTime(timeLeft)}
+        </div>
+
+        <div className="flex items-center gap-4">
+          <motion.button 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={toggleTimer}
+            className={`w-16 h-16 rounded-full flex items-center justify-center text-white shadow-lg transition-colors ${isActive ? 'bg-[var(--warn)] shadow-[var(--warn)]/20' : 'bg-[var(--accent)] shadow-[var(--accent)]/30'}`}
+          >
+            {isActive ? <Pause className="w-8 h-8" fill="currentColor" /> : <Play className="w-8 h-8 ml-1" fill="currentColor" />}
+          </motion.button>
+          
+          <motion.button 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={stopTimer}
+            className="w-14 h-14 rounded-full flex items-center justify-center border border-[var(--line)] bg-[color-mix(in_srgb,var(--panel2)_80%,transparent)] text-[var(--text)] shadow-sm transition-colors hover:bg-[var(--line)]"
+          >
+            <Square className="w-5 h-5" fill="currentColor" />
+          </motion.button>
+        </div>
+      </motion.div>
+
       <div className="bg-[var(--panel)] border border-[var(--line)] rounded-[var(--radius)] shadow-[var(--shadow)] overflow-hidden">
         <div className="flex items-center justify-between p-3 border-b border-[color-mix(in_srgb,var(--line)_85%,transparent)] bg-[color-mix(in_srgb,var(--panel2)_65%,transparent)]">
           <h2 className="m-0 text-[13px] font-bold">当日完成番茄闹钟统计</h2>
