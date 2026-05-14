@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { AppStoreProvider, useAppStore } from './lib/store';
 import { Button } from './components/ui/Button';
 import { ymd } from './lib/utils';
-import { Home, CheckSquare, Clock, Moon, BarChart2, BookOpen, MessageCircle, Settings, Moon as MoonIcon, Sun } from 'lucide-react';
+import { Home, CheckSquare, Clock, Moon, BarChart2, BookOpen, MessageCircle, Settings, Sun, Database } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 // Screens
@@ -79,10 +79,10 @@ function AppContent() {
                 </div>
               );
             })}
-            <div className="w-px h-6 bg-[var(--line)] mx-2"></div>
-            <Button onClick={() => setDataModalOpen(true)} title="数据导入/导出与存档">💾 数据</Button>
+            <Button onClick={() => setDataModalOpen(true)} title="数据导入/导出与存档"><Database className="w-3.5 h-3.5" /> 数据</Button>
             <Button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} title="切换日间/夜间">
-              {theme === 'light' ? '🌙 夜间' : '☀️ 日间'}
+              {theme === 'light' ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
+              {theme === 'light' ? ' 夜间' : ' 日间'}
             </Button>
           </nav>
           
@@ -92,7 +92,7 @@ function AppContent() {
               <Settings className="w-4 h-4" />
             </button>
             <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="p-2 border border-[var(--line)] rounded-md shadow-sm">
-              {theme === 'light' ? <MoonIcon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+              {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
             </button>
           </div>
         </div>

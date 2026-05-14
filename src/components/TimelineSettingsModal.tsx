@@ -3,6 +3,7 @@ import { Modal } from './ui/Modal';
 import { Button } from './ui/Button';
 import { useAppStore } from '../lib/store';
 import { timeToMin, minToTime } from '../lib/utils';
+import { Sun, Clock, Moon } from 'lucide-react';
 
 export function TimelineSettingsModal({ onClose }: { onClose: () => void }) {
   const { db, updateDb } = useAppStore();
@@ -44,7 +45,7 @@ export function TimelineSettingsModal({ onClose }: { onClose: () => void }) {
         
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-3">
-            <label className="w-16 text-sm font-medium">☀️ 早上</label>
+            <label className="w-16 text-sm font-medium flex items-center gap-1.5"><Sun className="w-3.5 h-3.5" /> 早上</label>
             <input 
               type="time" 
               step="300"
@@ -55,7 +56,7 @@ export function TimelineSettingsModal({ onClose }: { onClose: () => void }) {
           </div>
           
           <div className="flex items-center gap-3">
-            <label className="w-16 text-sm font-medium">🕛 中午</label>
+            <label className="w-16 text-sm font-medium flex items-center gap-1.5"><Clock className="w-4 h-4" /> 中午</label>
             <input 
               type="time" 
               step="300"
@@ -66,7 +67,7 @@ export function TimelineSettingsModal({ onClose }: { onClose: () => void }) {
           </div>
           
           <div className="flex items-center gap-3">
-            <label className="w-16 text-sm font-medium">🌙 晚上</label>
+            <label className="w-16 text-sm font-medium flex items-center gap-1.5"><Moon className="w-3.5 h-3.5" /> 晚上</label>
             <input 
               type="time" 
               step="300"

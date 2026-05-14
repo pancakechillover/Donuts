@@ -6,6 +6,7 @@ export interface TaskType {
 }
 
 export interface ActivitySegment {
+  id?: string;
   startMin: number;
   endMin: number;
   label: string;

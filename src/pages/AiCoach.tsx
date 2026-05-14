@@ -4,6 +4,7 @@ import { Button } from '../components/ui/Button';
 import Markdown from 'react-markdown';
 import { ChatSession, ChatMessage } from '../lib/types';
 import { SettingsModal } from '../components/AiSettingsModal';
+import { Bot, Plus, Settings, Download, Send, X } from 'lucide-react';
 
 export function AiCoach() {
   const { db, updateDb } = useAppStore();
@@ -230,7 +231,7 @@ export function AiCoach() {
         <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
           {(!activeSession || activeSession.messages.length === 0) && (
             <div className="flex-1 flex flex-col items-center justify-center mb-10 text-[var(--muted)]">
-              <div className="text-4xl mb-4">🤖</div>
+              <div className="text-4xl mb-4 text-[var(--accent)]"><Bot className="w-12 h-12" /></div>
               <h3 className="text-lg font-bold mb-2 text-[var(--text)]">你好！我是你的 AI 教练</h3>
               <p className="text-sm mb-8 text-center max-w-[300px]">我可以根据你的数据给出建议，或者听你倒苦水。试试下面的预设问题：</p>
               <div className="flex flex-wrap gap-2 justify-center max-w-[400px]">

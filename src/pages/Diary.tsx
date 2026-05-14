@@ -4,14 +4,15 @@ import { Button } from '../components/ui/Button';
 import { ymd, parseYMD } from '../lib/utils';
 import { Modal } from '../components/ui/Modal';
 import { DiaryChart } from '../components/DiaryChart';
+import { Smile, Meh, Frown } from 'lucide-react';
 
 const MOODS = [
-  { v: 0, t: "🙂" },
-  { v: 1, t: "😄" },
-  { v: 2, t: "🙂" },
-  { v: 3, t: "😐" },
-  { v: 4, t: "😟" },
-  { v: 5, t: "😣" },
+  { v: 0, t: "全部", icon: null },
+  { v: 1, t: "开心", icon: Smile },
+  { v: 2, t: "满意", icon: Smile },
+  { v: 3, t: "普通", icon: Meh },
+  { v: 4, t: "难过", icon: Frown },
+  { v: 5, t: "很糟糕", icon: Frown },
 ];
 
 export function DiaryScreen() {
@@ -178,9 +179,12 @@ export function DiaryScreen() {
                   {MOODS.filter(m => m.v !== 0).map(m => (
                     <button 
                       key={m.v}
-                      className={`w-7 h-7 rounded-full border border-[var(--line)] bg-transparent text-sm flex items-center justify-center cursor-pointer transition-colors ${mood === m.v ? 'border-[color-mix(in_srgb,var(--accent)_70%,var(--line))]' : ''}`}
+                      className={`w-7 h-7 rounded-full border border-[var(--line)] bg-transparent text-sm flex items-center justify-center cursor-pointer transition-colors ${mood === m.v ? 'border-[color-mix(in_srgb,var(--accent)_70%,var(--line))] text-[var(--accent)]' : 'text-[var(--muted)]'}`}
                       onClick={() => handleMoodClick(m.v)}
-                    >{m.t}</button>
+                      title={m.t}
+                    >
+                      {m.icon && <m.icon className="w-4 h-4" />}
+                    </button>
                   ))}
                </div>
                <div className="border border-[var(--line)] px-2.5 py-1 rounded-full text-xs text-[var(--muted)] select-none">{currentWordCount} 字</div>
@@ -240,12 +244,21 @@ export function DiaryScreen() {
 
           <div className="flex flex-wrap gap-2">
             <div 
-              className="border border-[var(--line)] px-2.5 py-1.5 rounded-full text-xs text-[var(--muted)] cursor-pointer select-none hover:bg-slate-800"
+              className="border border-[var(--line)] px-2.5 py-1.5 rounded-full text-xs text-[var(--muted)] cursor-pointer select-none hover:bg-slate-800 flex items-center gap-1.5"
               onClick={() => {
                 setMoodFilter((moodFilter + 1) % 6);
               }}
             >
-              心情：{moodFilter === 0 ? "全部" : (MOODS.find(x => x.v === moodFilter)?.t || moodFilter)}
+              心情：
+              {moodFilter === 0 ? "全部" : (
+                <>
+                  {(() => {
+                    const m = MOODS.find(x => x.v === moodFilter);
+                    return m && m.icon ? <m.icon className="w-3 h-3" /> : null;
+                  })()}
+                  <span className="text-[10px]">{MOODS.find(x => x.v === moodFilter)?.t}</span>
+                </>
+              )}
             </div>
             <input 
                className="flex-1 min-w-[180px] p-1.5 rounded-xl border border-[var(--line)] bg-[color-mix(in_srgb,var(--panel2)_62%,transparent)] text-[var(--text)] outline-none text-xs px-3"
@@ -268,7 +281,8 @@ export function DiaryScreen() {
                  const d = db.days[k].diary;
                  const isActive = k === dateKey;
                  const snippet = (d.text || "").trim().slice(0, 44).replace(/\s+/g, " ");
-                 const moodStr = d.mood ? (MOODS.find(x => x.v === d.mood)?.t || "🙂") : "—";
+                 const m = MOODS.find(x => x.v === d.mood);
+                 const moodIcon = m && m.icon ? <m.icon className="w-3 h-3" /> : null;
                  const wc = wordCount(d.title + d.text);
                  
                  return (
@@ -285,7 +299,7 @@ export function DiaryScreen() {
                        {snippet || "（无正文）"}
                      </div>
                      <div className="flex flex-wrap gap-1.5 items-center text-[10px]">
-                       <span className="px-2 py-0.5 rounded-full border border-[var(--line)] text-[var(--muted)]">心情 {moodStr}</span>
+                       <span className="px-2 py-0.5 rounded-full border border-[var(--line)] text-[var(--muted)] flex items-center gap-1">心情 {moodIcon}</span>
                        <span className="px-2 py-0.5 rounded-full border border-[var(--line)] text-[var(--muted)]">{wc} 字</span>
                        {d.tags.slice(0,3).map((t, idx) => (
                           <span key={idx} className="px-2 py-0.5 rounded-full border border-[var(--line)] text-[var(--muted)]">#{t}</span>

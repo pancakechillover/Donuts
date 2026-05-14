@@ -70,6 +70,15 @@ export function TypesManageModal({ onClose }: TypesManageModalProps) {
       });
     });
 
+    // Update recurring tasks as well
+    if (newDb.recurringTasks?.list) {
+      newDb.recurringTasks.list.forEach(rt => {
+        if (rt.typeId === id) {
+          rt.typeId = 'uncat';
+        }
+      });
+    }
+
     updateDb(newDb);
   };
 

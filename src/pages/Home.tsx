@@ -5,7 +5,7 @@ import { ymd, fmtMinRange, fmtDuration, minToTime, timeToMin, clamp } from '../l
 import { RingChart } from '../components/RingChart';
 import { CalendarPanel } from '../components/CalendarPanel';
 import { TimelineSettingsModal } from '../components/TimelineSettingsModal';
-import { Settings, Repeat } from 'lucide-react';
+import { Settings, Repeat, Sun, Clock, Moon } from 'lucide-react';
 import { ActivitySegment } from '../lib/types';
 
 export function HomeScreen() {
@@ -153,7 +153,7 @@ export function HomeScreen() {
                     {actsMorning.length > 0 && (
                       <div className="relative">
                         <div className="text-xs font-bold text-[var(--muted)] mb-3 flex items-center gap-2 sticky top-0 bg-[var(--panel)] z-10 py-1">
-                           ☀️ 早上 <span className="opacity-60 font-normal">({db.settings?.timeline?.morningStart || '06:00'} - {db.settings?.timeline?.noonStart || '12:00'})</span>
+                           <Sun className="w-3.5 h-3.5" /> 早上 <span className="opacity-60 font-normal">({db.settings?.timeline?.morningStart || '06:00'} - {db.settings?.timeline?.noonStart || '12:00'})</span>
                         </div>
                         {actsMorning.map((seg, idx) => renderAct(seg, idx))}
                       </div>
@@ -162,7 +162,7 @@ export function HomeScreen() {
                     {actsNoon.length > 0 && (
                       <div className="relative">
                         <div className="text-xs font-bold text-[var(--muted)] mb-3 flex items-center gap-2 sticky top-0 bg-[var(--panel)] z-10 py-1">
-                           🕛 中午 <span className="opacity-60 font-normal">({db.settings?.timeline?.noonStart || '12:00'} - {db.settings?.timeline?.eveningStart || '18:00'})</span>
+                           <Clock className="w-3.5 h-3.5" /> 中午 <span className="opacity-60 font-normal">({db.settings?.timeline?.noonStart || '12:00'} - {db.settings?.timeline?.eveningStart || '18:00'})</span>
                         </div>
                         {actsNoon.map((seg, idx) => renderAct(seg, idx))}
                       </div>
@@ -171,7 +171,7 @@ export function HomeScreen() {
                     {actsEvening.length > 0 && (
                       <div className="relative">
                         <div className="text-xs font-bold text-[var(--muted)] mb-3 flex items-center gap-2 sticky top-0 bg-[var(--panel)] z-10 py-1">
-                           🌙 晚上 <span className="opacity-60 font-normal">({db.settings?.timeline?.eveningStart || '18:00'} - 以后)</span>
+                           <Moon className="w-3.5 h-3.5" /> 晚上 <span className="opacity-60 font-normal">({db.settings?.timeline?.eveningStart || '18:00'} - 以后)</span>
                         </div>
                         {actsEvening.map((seg, idx) => renderAct(seg, idx))}
                       </div>

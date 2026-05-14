@@ -63,35 +63,51 @@ export function ActivityModal({ isOpen, onClose, initialRange, editingIndex }: A
 
     if (isRecurring) {
       if (!newDb.recurringTasks) newDb.recurringTasks = { list: [] };
-      let rtId = editingIndex != null && acts[editingIndex]?.recurringId 
-                 ? acts[editingIndex].recurringId! 
-                 : Math.random().toString(36).substring(2, 9);
+      
+      const editingAct = editingIndex !== null ? acts[editingIndex] : null;
+      const rtId = editingAct?.recurringId || Math.random().toString(36).substring(2, 9);
       
       const rtList = [...newDb.recurringTasks.list];
       const rtIdx = rtList.findIndex(t => t.id === rtId);
+      const existingRt = rtIdx >= 0 ? rtList[rtIdx] : null;
+      
       const rtObj = {
-        id: rtId, startMin: s, endMin: e, label: label.trim(), typeId, frequency, startDate: dateKey
+        id: rtId, 
+        startMin: s, 
+        endMin: e, 
+        label: label.trim(), 
+        typeId, 
+        frequency, 
+        startDate: existingRt ? existingRt.startDate : dateKey
       };
+      
       if (rtIdx >= 0) rtList[rtIdx] = rtObj;
       else rtList.push(rtObj);
       newDb.recurringTasks.list = rtList;
 
-      if (editingIndex != null && !acts[editingIndex].isRecurring) {
-         const normIdx = newActs.findIndex(a => a.startMin === acts[editingIndex].startMin && a.endMin === acts[editingIndex].endMin && a.label === acts[editingIndex].label);
+      if (editingAct && !editingAct.isRecurring) {
+         // If we're converting a normal task to recurring, remove it from the day's local list
+         const normIdx = newActs.findIndex(a => a.id === editingAct.id || (a.startMin === editingAct.startMin && a.endMin === editingAct.endMin && a.label === editingAct.label));
          if(normIdx >= 0) newActs.splice(normIdx, 1);
       }
     } else {
-      const seg: ActivitySegment = { startMin: s, endMin: e, label: label.trim(), typeId };
-      if (editingIndex != null) {
-        if (acts[editingIndex].isRecurring) {
+      const editingAct = editingIndex !== null ? acts[editingIndex] : null;
+      const segId = editingAct?.id || Math.random().toString(36).substring(2, 9);
+      const seg: ActivitySegment = { id: segId, startMin: s, endMin: e, label: label.trim(), typeId };
+
+      if (editingAct) {
+        if (editingAct.isRecurring) {
+          // If we're converting a recurring task to normal, remove it from recurringTasks list
           if (newDb.recurringTasks) {
-             const rtId = acts[editingIndex].recurringId;
+             const rtId = editingAct.recurringId;
              newDb.recurringTasks.list = newDb.recurringTasks.list.filter(t => t.id !== rtId);
           }
           newActs.push(seg);
         } else {
-          const normIdx = newActs.findIndex(a => a.startMin === acts[editingIndex].startMin && a.endMin === acts[editingIndex].endMin && a.label === acts[editingIndex].label);
+          // Update normal task
+          const normIdx = newActs.findIndex(a => a.id === editingAct.id || (a.startMin === editingAct.startMin && a.endMin === editingAct.endMin && a.label === editingAct.label));
           if(normIdx >= 0) newActs[normIdx] = seg;
+          else newActs.push(seg);
         }
       } else {
         newActs.push(seg);
@@ -115,7 +131,7 @@ export function ActivityModal({ isOpen, onClose, initialRange, editingIndex }: A
        }
     } else {
        const newActs = [...todaysData.activities];
-       const normIdx = newActs.findIndex(a => a.startMin === act.startMin && a.endMin === act.endMin && a.label === act.label);
+       const normIdx = newActs.findIndex(a => a.id === act.id || (a.startMin === act.startMin && a.endMin === act.endMin && a.label === act.label));
        if (normIdx >= 0) {
          newActs.splice(normIdx, 1);
          newDb.days[dateKey] = { ...todaysData, activities: newActs };

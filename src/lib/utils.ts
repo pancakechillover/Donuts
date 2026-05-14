@@ -31,6 +31,7 @@ export function getMatchingRecurringTasks(dateKey: string, tasks: RecurringTask[
       return false;
     })
     .map(t => ({
+      id: t.id,
       startMin: t.startMin,
       endMin: t.endMin,
       label: t.label,

@@ -5,7 +5,7 @@ import { ymd, parseYMD, clamp } from '../lib/utils';
 import { Modal } from '../components/ui/Modal';
 import { PomodoroChart } from '../components/PomodoroChart';
 import { motion } from 'motion/react';
-import { Play, Pause, Square, Clock } from 'lucide-react';
+import { Play, Pause, Square, Clock, Sunrise, Sun, Moon, Coffee, Target, CheckCircle } from 'lucide-react';
 
 export function PomodoroScreen() {
   const { db, selectedDate, setSelectedDate, getDayData, updateDayData } = useAppStore();
@@ -34,7 +34,7 @@ export function PomodoroScreen() {
       setIsActive(false);
       
       const isWork = mode === 'work';
-      const title = isWork ? "🍅 专注完成！" : "🍩 休息结束！";
+      const title = isWork ? "Focus Completed!" : "Break Ended!";
       const body = isWork ? "甜甜圈出炉啦，休息一下吧！" : "准备好开始新的专注了吗？";
       
       if ('Notification' in window && Notification.permission === 'granted') {
@@ -124,11 +124,11 @@ export function PomodoroScreen() {
     return Array.from({ length: 8 }).map((_, i) => (
       <span 
         key={i} 
-        className="text-[28px] cursor-pointer transition-all duration-300" 
-        style={i < count ? { cursor: 'default' } : { filter: 'grayscale(100%)', opacity: 0.3 }}
+        className="text-[28px] cursor-pointer transition-all duration-300 flex items-center justify-center h-8" 
+        style={i < count ? { color: '#f86521' } : { color: 'var(--muted)', opacity: 0.3 }}
         onClick={() => { if (i >= count) handleStep(part, 1); }}
       >
-        🍅
+        <Target className="w-6 h-6" />
       </span>
     ));
   };
@@ -154,7 +154,7 @@ export function PomodoroScreen() {
             onClick={() => switchMode('break')}
             className={`px-6 py-2 rounded-full text-sm font-bold cursor-pointer transition-all flex items-center gap-2 ${mode === 'break' ? 'bg-[var(--good)] text-white shadow-md scale-105' : 'text-[var(--muted)] hover:text-[var(--text)]'}`}
           >
-            休息 🍩
+            休息 <Coffee className="w-4 h-4" />
           </div>
         </div>
 
@@ -211,9 +211,9 @@ export function PomodoroScreen() {
           <div className="grid md:grid-cols-3 gap-5 md:gap-4 my-6">
              <div className="w-full max-w-sm mx-auto bg-gradient-to-b from-[var(--bg)] to-[var(--bg2)] rounded-[18px] shadow-[0_4px_24px_rgba(255,186,73,0.1)] p-5 flex flex-col gap-2 items-center">
                 <div>
-                   <div className="text-[38px] leading-tight mb-2 text-center">🌅</div>
+                   <div className="flex justify-center mb-4 text-[#7AA2FF]"><Sunrise className="w-10 h-10" /></div>
                    <div className="text-xl font-bold mb-0.5 text-center">早晨</div>
-                   <div className="text-sm mb-2.5 text-center text-[var(--muted)]">08:00–12:00</div>
+                   <div className="text-sm mb-2.5 text-center text-[var(--muted)]">{db.settings?.timeline?.morningStart || '08:00'}–{db.settings?.timeline?.noonStart || '12:00'}</div>
                 </div>
                 <div className="flex items-center gap-2 mb-2">
                    <Button onClick={() => handleStep('morning', -1)}>－</Button>
@@ -227,9 +227,9 @@ export function PomodoroScreen() {
 
              <div className="w-full max-w-sm mx-auto bg-gradient-to-b from-[var(--bg)] to-[var(--bg2)] rounded-[18px] shadow-[0_4px_24px_rgba(255,186,73,0.1)] p-5 flex flex-col gap-2 items-center">
                 <div>
-                   <div className="text-[38px] leading-tight mb-2 text-center">☀️</div>
+                   <div className="flex justify-center mb-4 text-[#FFB347]"><Sun className="w-10 h-10" /></div>
                    <div className="text-xl font-bold mb-0.5 text-center">中午</div>
-                   <div className="text-sm mb-2.5 text-center text-[var(--muted)]">14:00–18:00</div>
+                   <div className="text-sm mb-2.5 text-center text-[var(--muted)]">{db.settings?.timeline?.noonStart || '14:00'}–{db.settings?.timeline?.eveningStart || '18:00'}</div>
                 </div>
                 <div className="flex items-center gap-2 mb-2">
                    <Button onClick={() => handleStep('noon', -1)}>－</Button>
@@ -243,9 +243,9 @@ export function PomodoroScreen() {
 
              <div className="w-full max-w-sm mx-auto bg-gradient-to-b from-[var(--bg)] to-[var(--bg2)] rounded-[18px] shadow-[0_4px_24px_rgba(255,186,73,0.1)] p-5 flex flex-col gap-2 items-center">
                 <div>
-                   <div className="text-[38px] leading-tight mb-2 text-center">🌙</div>
+                   <div className="flex justify-center mb-4 text-[#a78bfa]"><Moon className="w-10 h-10" /></div>
                    <div className="text-xl font-bold mb-0.5 text-center">晚上</div>
-                   <div className="text-sm mb-2.5 text-center text-[var(--muted)]">20:00–24:00</div>
+                   <div className="text-sm mb-2.5 text-center text-[var(--muted)]">{db.settings?.timeline?.eveningStart || '20:00'}–24:00</div>
                 </div>
                 <div className="flex items-center gap-2 mb-2">
                    <Button onClick={() => handleStep('evening', -1)}>－</Button>
@@ -259,7 +259,9 @@ export function PomodoroScreen() {
           </div>
 
           <div className="w-full mb-4 bg-gradient-to-b from-[var(--bg)] to-[var(--bg2)] rounded-[18px] shadow-[0_4px_24px_rgba(255,186,73,0.08)] p-4 flex flex-col gap-2 items-center">
-             <div className="text-[22px] font-bold text-center mb-2">🍅 今日总结</div>
+             <div className="text-[22px] font-bold text-center mb-2 flex items-center gap-2">
+                <CheckCircle className="w-6 h-6 text-[#f86521]" /> 今日总结
+             </div>
              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full justify-items-center items-stretch">
                 <div className="bg-[color-mix(in_srgb,var(--panel2)_62%,transparent)] rounded-2xl p-2.5 min-w-[90px] text-center w-full">
                    <div className="text-[13px] text-[var(--muted)] mb-1">总番茄数</div>

@@ -3,6 +3,7 @@ import { Modal } from './ui/Modal';
 import { Button } from './ui/Button';
 import { useAppStore } from '../lib/store';
 import { nowYMD } from '../lib/utils';
+import { Upload, Download, Trash2, X } from 'lucide-react';
 
 interface DataModalProps {
   onClose: () => void;
@@ -195,13 +196,13 @@ export function DataModal({ onClose }: DataModalProps) {
             </div>
             <div className="flex gap-2 flex-wrap text-sm items-center">
               <Button variant="primary" onClick={() => handleSyncPush()} disabled={isSyncing}>
-                {isSyncing ? '同步中...' : '↑ 推送覆盖云端'}
+                {isSyncing ? '同步中...' : <span className="flex items-center gap-1.5"><Upload className="w-3.5 h-3.5" /> 推送覆盖云端</span>}
               </Button>
               <Button onClick={() => handleSyncPull()} disabled={isSyncing}>
-                ↓ 拉取覆盖本地
+                <span className="flex items-center gap-1.5"><Download className="w-3.5 h-3.5" /> 拉取覆盖本地</span>
               </Button>
               <Button variant="danger" onClick={() => handleCancelSync()} disabled={isSyncing}>
-                ✕ 清空云端数据
+                <span className="flex items-center gap-1.5"><Trash2 className="w-3.5 h-3.5" /> 清空云端数据</span>
               </Button>
               <label className="flex items-center gap-1.5 ml-1 cursor-pointer text-xs select-none">
                 <input 
