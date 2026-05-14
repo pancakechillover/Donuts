@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+:root {
+    /* Professional Polish - Dark Mode Variation */
+    --bg: #0f172a;
+    --bg2: #020617;
+    --panel: #1e293b;
+    --panel2: #334155;
+    --text: #f8fafc;
+    --muted: #94a3b8;
+    --line: #334155;
+    --accent: #3b82f6;
+    --good: #10b981;
+    --warn: #f59e0b;
+    --bad: #ef4444;
+    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --font: ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    --radius: 0.5rem;
+}
+
+body.light {
+    /* Professional Polish - Light */
+    --bg: #f8fafc;
+    --bg2: #f1f5f9;
+    --panel: #ffffff;
+    --panel2: #f8fafc;
+    --text: #0f172a;
+    --muted: #64748b;
+    --line: #e2e8f0;
+    --accent: #2563eb;
+    --good: #059669;
+    --warn: #d97706;
+    --bad: #dc2626;
+    --shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    min-height: 100vh;
+}
+
+button, input, select, textarea {
+    font-family: inherit;
+}
+
+.modal-backdrop {
+    background: rgba(2, 6, 23, .6);
+    backdrop-filter: blur(2px);
+}
+body.light .modal-backdrop {
+    background: rgba(15, 23, 42, .4);
+}
