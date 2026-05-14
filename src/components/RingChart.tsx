@@ -11,7 +11,7 @@ interface SegmentInfo {
 export function RingChart() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { db, selectedDate, theme, getDayData } = useAppStore();
+  const { db, selectedDate, theme, getDayData, getCombinedActivities } = useAppStore();
   
   const [modalOpen, setModalOpen] = useState(false);
   const [dragPreview, setDragPreview] = useState<SegmentInfo | null>(null);
@@ -20,7 +20,7 @@ export function RingChart() {
 
   const dateKey = ymd(selectedDate);
   const isToday = ymd(new Date()) === dateKey;
-  const acts = getDayData(dateKey).activities;
+  const acts = getCombinedActivities(dateKey);
   const typeMap = useMemo(() => {
     const map = new Map<string, string>();
     db.taskTypes.list.forEach(t => map.set(t.id, t.color));

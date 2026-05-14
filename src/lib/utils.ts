@@ -1,9 +1,43 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { RecurringTask, ActivitySegment } from "./types";
 
 // Tailwind merge
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+export function getMatchingRecurringTasks(dateKey: string, tasks: RecurringTask[]): ActivitySegment[] {
+  if (!tasks || !tasks.length) return [];
+  const targetDate = parseYMD(dateKey);
+  const targetT = targetDate.getTime();
+  
+  return tasks
+    .filter(t => {
+      const startT = parseYMD(t.startDate).getTime();
+      if (targetT < startT) return false;
+      
+      const st = parseYMD(t.startDate);
+      if (t.frequency === 'daily') return true;
+      if (t.frequency === 'weekly') {
+        return targetDate.getDay() === st.getDay();
+      }
+      if (t.frequency === 'monthly') {
+        return targetDate.getDate() === st.getDate();
+      }
+      if (t.frequency === 'yearly') {
+        return targetDate.getMonth() === st.getMonth() && targetDate.getDate() === st.getDate();
+      }
+      return false;
+    })
+    .map(t => ({
+      startMin: t.startMin,
+      endMin: t.endMin,
+      label: t.label,
+      typeId: t.typeId,
+      isRecurring: true,
+      recurringId: t.id
+    }));
 }
 
 // Date formatting

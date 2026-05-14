@@ -6,12 +6,13 @@ import { StatsBarChart } from '../components/StatsBarChart';
 import { StatsPieChart } from '../components/StatsPieChart';
 
 export function StatsScreen() {
-  const { db, selectedDate, setSelectedDate } = useAppStore();
+  const { db, selectedDate, setSelectedDate, getCombinedActivities } = useAppStore();
   const [statsMode, setStatsMode] = useState<'byday' | 'bycat'>('byday');
   const [statsRange, setStatsRange] = useState<number>(14);
   const [statsCategory, setStatsCategory] = useState<string>('uncat');
   
   const statsDayKey = ymd(selectedDate);
+  const todaysActs = getCombinedActivities(statsDayKey);
 
   const rangeDays = useMemo(() => {
     const arr = [];
@@ -142,8 +143,8 @@ export function StatsScreen() {
             <div>
                <h2 className="m-0 text-[13px] font-bold">当日类别分布（{statsDayKey}）</h2>
                <div className="text-xs text-[var(--muted)] mt-0.5">
-                 {db.days[statsDayKey] && db.days[statsDayKey].activities.length > 0 
-                  ? `总记录：${fmtDuration(db.days[statsDayKey].activities.reduce((s,a)=>s+(a.endMin-a.startMin),0))}（不含空白时间）`
+                 {todaysActs.length > 0 
+                  ? `总记录：${fmtDuration(todaysActs.reduce((s,a)=>s+(a.endMin-a.startMin),0))}（不含空白时间）`
                   : '当日暂无活动记录'
                  }
                </div>

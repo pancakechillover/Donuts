@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { Database, DayData, Habit, AiPersona } from "./types";
-import { nowYMD } from "./utils";
+import { Database, DayData, Habit, AiPersona, ActivitySegment } from "./types";
+import { nowYMD, getMatchingRecurringTasks } from "./utils";
 
 const STORAGE_KEY = "dailyTrackerData_v3";
 const THEME_KEY = "dailyTrackerTheme_v1";
@@ -30,6 +30,7 @@ interface AppState {
   setSelectedDate: (date: Date) => void;
   setCalendarMonth: (date: Date) => void;
   getDayData: (dateKey: string) => DayData;
+  getCombinedActivities: (dateKey: string) => ActivitySegment[];
   updateDayData: (dateKey: string, data: Partial<DayData>) => void;
   clearLocalData: () => void;
 }
@@ -47,6 +48,9 @@ function getDefaultDb(): Database {
         { id: "work", name: "工作", color: "#46d39a", created: nowYMD() },
         { id: "life", name: "生活", color: "#ffcc66", created: nowYMD() },
       ],
+    },
+    recurringTasks: {
+      list: []
     },
     aiChats: {
       sessions: [],
@@ -72,6 +76,7 @@ function loadDB(): Database {
     parsed.habits.list ||= [];
     parsed.habits.records ||= {};
     parsed.taskTypes ||= { list: [] };
+    parsed.recurringTasks ||= { list: [] };
     parsed.aiChats ||= getDefaultDb().aiChats;
     
     if (!parsed.settings) {
@@ -138,6 +143,19 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(newDb));
   };
 
+  const getCombinedActivities = (dateKey: string): ActivitySegment[] => {
+    const rawActs = [...getDayData(dateKey).activities];
+    if (db.recurringTasks?.list?.length) {
+      const recurring = getMatchingRecurringTasks(dateKey, db.recurringTasks.list);
+      recurring.forEach(ra => {
+        if (!rawActs.some(a => a.recurringId === ra.recurringId)) {
+          rawActs.push(ra);
+        }
+      });
+    }
+    return rawActs.sort((a,b) => a.startMin - b.startMin);
+  };
+
   const getDayData = (dateKey: string): DayData => {
     const existing = db.days[dateKey];
     if (existing) {
@@ -180,6 +198,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         setSelectedDate,
         setCalendarMonth,
         getDayData,
+        getCombinedActivities,
         updateDayData,
         clearLocalData,
       }}

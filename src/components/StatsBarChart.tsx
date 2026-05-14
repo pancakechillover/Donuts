@@ -13,7 +13,7 @@ interface StatsBarChartProps {
 
 export function StatsBarChart({ mode, rangeDays, typeId, statsDayKey, onBarClick }: StatsBarChartProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { db, theme } = useAppStore();
+  const { db, theme, getCombinedActivities } = useAppStore();
   const hitBoxesRef = useRef<{x:number, y:number, w:number, h:number, dayKey: string}[]>([]);
 
   useEffect(() => {
@@ -38,7 +38,7 @@ export function StatsBarChart({ mode, rangeDays, typeId, statsDayKey, onBarClick
     const H = rect.height;
 
     const sumMinsForType = (day: string, tid: string) => {
-      const acts = db.days[day]?.activities || [];
+      const acts = getCombinedActivities(day);
       return acts.filter(a => (a.typeId || "uncat") === tid).reduce((s, a) => s + (a.endMin - a.startMin), 0);
     };
     

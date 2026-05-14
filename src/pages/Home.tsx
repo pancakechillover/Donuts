@@ -5,11 +5,11 @@ import { ymd, fmtMinRange, fmtDuration, minToTime, timeToMin, clamp } from '../l
 import { RingChart } from '../components/RingChart';
 import { CalendarPanel } from '../components/CalendarPanel';
 import { TimelineSettingsModal } from '../components/TimelineSettingsModal';
-import { Settings } from 'lucide-react';
+import { Settings, Repeat } from 'lucide-react';
 import { ActivitySegment } from '../lib/types';
 
 export function HomeScreen() {
-  const { db, selectedDate, setSelectedDate, getDayData } = useAppStore();
+  const { db, selectedDate, setSelectedDate, getDayData, getCombinedActivities } = useAppStore();
   const [timelineSettingsOpen, setTimelineSettingsOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'time' | 'category'>('time');
   const dateKey = ymd(selectedDate);
@@ -19,7 +19,7 @@ export function HomeScreen() {
     setSelectedDate(new Date(new Date().setHours(0,0,0,0)));
   };
 
-  const acts = [...todaysData.activities].sort((a,b) => a.startMin - b.startMin);
+  const acts = getCombinedActivities(dateKey);
   const totalMin = acts.reduce((acc, seg) => acc + (seg.endMin - seg.startMin), 0);
 
   const mStart = timeToMin(db.settings?.timeline?.morningStart || '06:00');
@@ -63,7 +63,10 @@ export function HomeScreen() {
           <div className="h-1.5 opacity-80" style={{ background: typeInfo.color }}></div>
           <div className="p-2.5 px-3">
             <div className="flex justify-between items-baseline gap-2.5">
-              <b className="text-[13px] font-bold truncate">{seg.label || "未命名任务"}</b>
+              <b className="text-[13px] font-bold truncate flex items-center gap-1.5">
+                {seg.isRecurring && <Repeat className="w-3 h-3 text-[var(--accent)]" />}
+                {seg.label || "未命名任务"}
+              </b>
               <span className="text-[11px] font-mono whitespace-nowrap opacity-60">{fmtMinRange(seg.startMin, seg.endMin)}</span>
             </div>
             <div className="text-[11px] text-[var(--muted)] mt-1 flex justify-between gap-2.5 items-center">

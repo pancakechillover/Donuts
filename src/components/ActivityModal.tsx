@@ -14,16 +14,18 @@ interface ActivityModalProps {
 }
 
 export function ActivityModal({ isOpen, onClose, initialRange, editingIndex }: ActivityModalProps) {
-  const { db, updateDb, selectedDate, getDayData } = useAppStore();
+  const { db, updateDb, selectedDate, getDayData, getCombinedActivities } = useAppStore();
   
   const dateKey = ymd(selectedDate);
   const todaysData = getDayData(dateKey);
-  const acts = todaysData.activities;
+  const acts = getCombinedActivities(dateKey);
 
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
   const [label, setLabel] = useState("");
   const [typeId, setTypeId] = useState("uncat");
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [frequency, setFrequency] = useState<'daily'|'weekly'|'monthly'|'yearly'>('daily');
 
   const [manageModalOpen, setManageModalOpen] = useState(false);
 
@@ -34,13 +36,20 @@ export function ActivityModal({ isOpen, onClose, initialRange, editingIndex }: A
       setEnd(minToTime(seg.endMin));
       setLabel(seg.label);
       setTypeId(seg.typeId);
+      setIsRecurring(!!seg.isRecurring);
+      if (seg.isRecurring && seg.recurringId && db.recurringTasks?.list) {
+        const rt = db.recurringTasks.list.find(t => t.id === seg.recurringId);
+        if (rt) setFrequency(rt.frequency);
+      }
     } else {
       setStart(minToTime(initialRange.startMin));
       setEnd(minToTime(initialRange.endMin));
       setLabel("");
       setTypeId("uncat");
+      setIsRecurring(false);
+      setFrequency('daily');
     }
-  }, [editingIndex, initialRange, acts]);
+  }, [editingIndex, initialRange, acts, db.recurringTasks]);
 
   const handleSave = () => {
     const s = timeToMin(start);
@@ -49,17 +58,47 @@ export function ActivityModal({ isOpen, onClose, initialRange, editingIndex }: A
     if (e <= s) return alert("结束时间需要晚于开始时间（不跨天）。如需跨天，请拆成两段记录。");
     if (!label.trim()) return alert("请填写活动名称");
 
-    const seg: ActivitySegment = { startMin: s, endMin: e, label: label.trim(), typeId };
-    
-    // Merge new segments
-    const newActs = [...acts];
-    if (editingIndex != null) newActs[editingIndex] = seg;
-    else newActs.push(seg);
-    
-    // Sort
-    newActs.sort((a,b) => a.startMin - b.startMin);
-
     const newDb = { ...db };
+    const newActs = [...todaysData.activities];
+
+    if (isRecurring) {
+      if (!newDb.recurringTasks) newDb.recurringTasks = { list: [] };
+      let rtId = editingIndex != null && acts[editingIndex]?.recurringId 
+                 ? acts[editingIndex].recurringId! 
+                 : Math.random().toString(36).substring(2, 9);
+      
+      const rtList = [...newDb.recurringTasks.list];
+      const rtIdx = rtList.findIndex(t => t.id === rtId);
+      const rtObj = {
+        id: rtId, startMin: s, endMin: e, label: label.trim(), typeId, frequency, startDate: dateKey
+      };
+      if (rtIdx >= 0) rtList[rtIdx] = rtObj;
+      else rtList.push(rtObj);
+      newDb.recurringTasks.list = rtList;
+
+      if (editingIndex != null && !acts[editingIndex].isRecurring) {
+         const normIdx = newActs.findIndex(a => a.startMin === acts[editingIndex].startMin && a.endMin === acts[editingIndex].endMin && a.label === acts[editingIndex].label);
+         if(normIdx >= 0) newActs.splice(normIdx, 1);
+      }
+    } else {
+      const seg: ActivitySegment = { startMin: s, endMin: e, label: label.trim(), typeId };
+      if (editingIndex != null) {
+        if (acts[editingIndex].isRecurring) {
+          if (newDb.recurringTasks) {
+             const rtId = acts[editingIndex].recurringId;
+             newDb.recurringTasks.list = newDb.recurringTasks.list.filter(t => t.id !== rtId);
+          }
+          newActs.push(seg);
+        } else {
+          const normIdx = newActs.findIndex(a => a.startMin === acts[editingIndex].startMin && a.endMin === acts[editingIndex].endMin && a.label === acts[editingIndex].label);
+          if(normIdx >= 0) newActs[normIdx] = seg;
+        }
+      } else {
+        newActs.push(seg);
+      }
+    }
+    
+    newActs.sort((a,b) => a.startMin - b.startMin);
     newDb.days[dateKey] = { ...todaysData, activities: newActs };
     updateDb(newDb);
     onClose();
@@ -67,10 +106,22 @@ export function ActivityModal({ isOpen, onClose, initialRange, editingIndex }: A
 
   const handleDelete = () => {
     if (editingIndex == null) return;
-    const newActs = [...acts];
-    newActs.splice(editingIndex, 1);
     const newDb = { ...db };
-    newDb.days[dateKey] = { ...todaysData, activities: newActs };
+    const act = acts[editingIndex];
+
+    if (act.isRecurring && act.recurringId) {
+       if (newDb.recurringTasks) {
+         newDb.recurringTasks.list = newDb.recurringTasks.list.filter(t => t.id !== act.recurringId);
+       }
+    } else {
+       const newActs = [...todaysData.activities];
+       const normIdx = newActs.findIndex(a => a.startMin === act.startMin && a.endMin === act.endMin && a.label === act.label);
+       if (normIdx >= 0) {
+         newActs.splice(normIdx, 1);
+         newDb.days[dateKey] = { ...todaysData, activities: newActs };
+       }
+    }
+    
     updateDb(newDb);
     onClose();
   };
@@ -143,6 +194,34 @@ export function ActivityModal({ isOpen, onClose, initialRange, editingIndex }: A
             </select>
             <Button onClick={(e) => { e.preventDefault(); setManageModalOpen(true); }} className="whitespace-nowrap">☰ 管理分类</Button>
           </div>
+        </div>
+
+        <div className="mt-2 p-3 bg-[var(--panel2)] border border-[var(--line)] rounded-xl flex flex-col gap-3">
+          <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+            <input 
+              type="checkbox" 
+              className="w-4 h-4 rounded border-[var(--line)] text-[var(--accent)] focus:ring-[var(--accent)]"
+              checked={isRecurring}
+              onChange={e => setIsRecurring(e.target.checked)}
+            />
+            设为循环出现
+          </label>
+
+          {isRecurring && (
+            <div className="flex items-center gap-3 pl-6">
+              <span className="text-xs text-[var(--muted)]">循环频次:</span>
+              <select 
+                className="flex-1 p-2 bg-[var(--panel)] border border-[var(--line)] rounded-md text-sm outline-none"
+                value={frequency}
+                onChange={e => setFrequency(e.target.value as any)}
+              >
+                <option value="daily">每天 (Daily)</option>
+                <option value="weekly">每周 (Weekly)</option>
+                <option value="monthly">每月 (Monthly)</option>
+                <option value="yearly">每年 (Yearly)</option>
+              </select>
+            </div>
+          )}
         </div>
         
         <div className="text-[11px] text-[var(--muted)] mt-1">

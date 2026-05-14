@@ -78,7 +78,7 @@ export function TimelineSettingsModal({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="flex justify-end gap-2 mt-2">
-          <Button variant="secondary" onClick={onClose}>取消</Button>
+          <Button variant="default" onClick={onClose}>取消</Button>
           <Button variant="primary" onClick={handleSave}>保存</Button>
         </div>
       </div>

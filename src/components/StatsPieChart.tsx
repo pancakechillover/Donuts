@@ -4,7 +4,7 @@ import { roundRect, setCanvasFont, fmtDuration } from '../lib/utils';
 
 export function StatsPieChart({ dayKey }: { dayKey: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { db, theme } = useAppStore();
+  const { db, theme, getCombinedActivities } = useAppStore();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -27,7 +27,7 @@ export function StatsPieChart({ dayKey }: { dayKey: string }) {
     const H = rect.height;
 
     const map = new Map<string, number>();
-    const acts = db.days[dayKey]?.activities || [];
+    const acts = getCombinedActivities(dayKey);
     for (const a of acts) {
         const id = a.typeId || "uncat";
         map.set(id, (map.get(id) || 0) + (a.endMin - a.startMin));

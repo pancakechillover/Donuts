@@ -10,6 +10,8 @@ export interface ActivitySegment {
   endMin: number;
   label: string;
   typeId: string;
+  isRecurring?: boolean;
+  recurringId?: string;
 }
 
 export interface PomodoroData {
@@ -81,6 +83,16 @@ export interface TimelineConfig {
   eveningStart: string; // HH:mm
 }
 
+export interface RecurringTask {
+  id: string;
+  startMin: number;
+  endMin: number;
+  label: string;
+  typeId: string;
+  frequency: 'daily' | 'weekly' | 'monthly' | 'yearly';
+  startDate: string; // YYYY-MM-DD
+}
+
 export interface Database {
   days: Record<string, DayData>;
   habits: {
@@ -89,6 +101,9 @@ export interface Database {
   };
   taskTypes: {
     list: TaskType[];
+  };
+  recurringTasks?: {
+    list: RecurringTask[];
   };
   aiChats: {
     sessions: ChatSession[];
