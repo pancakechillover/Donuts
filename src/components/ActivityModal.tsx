@@ -27,6 +27,7 @@ export function ActivityModal({ isOpen, onClose, initialRange, editingIndex }: A
   const [isRecurring, setIsRecurring] = useState(false);
   const [isDeadline, setIsDeadline] = useState(false);
   const [frequency, setFrequency] = useState<'daily'|'weekly'|'monthly'|'yearly'>('daily');
+  const [endDate, setEndDate] = useState("");
 
   const [manageModalOpen, setManageModalOpen] = useState(false);
 
@@ -43,7 +44,10 @@ export function ActivityModal({ isOpen, onClose, initialRange, editingIndex }: A
       setIsDeadline(!!seg.isDeadline);
       if (seg.isRecurring && seg.recurringId && db.recurringTasks?.list) {
         const rt = db.recurringTasks.list.find(t => t.id === seg.recurringId);
-        if (rt) setFrequency(rt.frequency);
+        if (rt) {
+          setFrequency(rt.frequency);
+          setEndDate(rt.endDate || "");
+        }
       }
     } else {
       setStart(minToTime(initialRange.startMin));
@@ -53,6 +57,7 @@ export function ActivityModal({ isOpen, onClose, initialRange, editingIndex }: A
       setIsRecurring(false);
       setIsDeadline(false);
       setFrequency('daily');
+      setEndDate("");
     }
     // We only want to initialize the form when it opens or editing index changes
   }, [editingIndex, initialRange, isOpen]);
@@ -86,6 +91,7 @@ export function ActivityModal({ isOpen, onClose, initialRange, editingIndex }: A
         typeId, 
         frequency, 
         startDate: existingRt ? existingRt.startDate : dateKey,
+        endDate: endDate ? endDate : undefined,
         isDeadline
       };
       
@@ -257,23 +263,34 @@ export function ActivityModal({ isOpen, onClose, initialRange, editingIndex }: A
           </div>
 
           {isRecurring && (
-            <div className="flex items-center gap-3 pl-2 py-2 border-t border-[var(--line)] mt-1 animate-in fade-in slide-in-from-top-1">
-              <span className="text-xs text-[var(--muted)] shrink-0">循环方案:</span>
-              <select 
-                className="flex-1 p-2 bg-[var(--panel)] border border-[var(--line)] rounded-md text-sm outline-none"
-                value={frequency}
-                onChange={e => {
-                  e.stopPropagation();
-                  setFrequency(e.target.value as any);
-                }}
-                onClick={e => e.stopPropagation()}
-              >
-                <option value="daily">每天 (Daily)</option>
-                <option value="weekly">每周 (Weekly)</option>
-                <option value="monthly">每月 (Monthly)</option>
-                <option value="yearly">每年 (Yearly)</option>
-              </select>
-            </div>
+            <>
+              <div className="flex items-center gap-3 pl-2 py-2 border-t border-[var(--line)] mt-1 animate-in fade-in slide-in-from-top-1">
+                <span className="text-xs text-[var(--muted)] shrink-0">循环方案:</span>
+                <select 
+                  className="flex-1 p-2 bg-[var(--panel)] border border-[var(--line)] rounded-md text-sm outline-none"
+                  value={frequency}
+                  onChange={e => {
+                    e.stopPropagation();
+                    setFrequency(e.target.value as any);
+                  }}
+                  onClick={e => e.stopPropagation()}
+                >
+                  <option value="daily">每天 (Daily)</option>
+                  <option value="weekly">每周 (Weekly)</option>
+                  <option value="monthly">每月 (Monthly)</option>
+                  <option value="yearly">每年 (Yearly)</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-3 pl-2 py-2">
+                <span className="text-xs text-[var(--muted)] shrink-0">结束日期:</span>
+                <input 
+                  type="date"
+                  className="flex-1 p-2 bg-[var(--panel)] border border-[var(--line)] rounded-md text-sm outline-none"
+                  value={endDate}
+                  onChange={e => setEndDate(e.target.value)}
+                />
+              </div>
+            </>
           )}
         </div>
         

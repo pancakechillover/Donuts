@@ -17,6 +17,11 @@ export function getMatchingRecurringTasks(dateKey: string, tasks: RecurringTask[
       const startT = parseYMD(t.startDate).getTime();
       if (targetT < startT) return false;
       
+      if (t.endDate) {
+        const endT = parseYMD(t.endDate).getTime();
+        if (targetT > endT) return false;
+      }
+      
       const st = parseYMD(t.startDate);
       if (t.frequency === 'daily') return true;
       if (t.frequency === 'weekly') {

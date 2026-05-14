@@ -93,6 +93,7 @@ export interface RecurringTask {
   typeId: string;
   frequency: 'daily' | 'weekly' | 'monthly' | 'yearly';
   startDate: string; // YYYY-MM-DD
+  endDate?: string; // YYYY-MM-DD, optional
   isDeadline?: boolean;
 }
 
