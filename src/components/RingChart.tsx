@@ -205,9 +205,12 @@ export function RingChart() {
   }, [draw, isToday]);
 
   // Handle Drag
+  type DragAction = 'create' | 'move' | 'resize-start' | 'resize-end';
   const draggingRef = useRef(false);
   const dragStartRef = useRef<number | null>(null);
   const dragHitIndexRef = useRef<number>(-1);
+  const dragModeRef = useRef<DragAction>('create');
+  const dragOriginalActRef = useRef<ActivitySegment | null>(null);
 
   const getAngle = (e: React.MouseEvent | React.TouchEvent | MouseEvent | TouchEvent) => {
     if (!canvasRef.current) return null;
@@ -236,16 +239,19 @@ export function RingChart() {
     const dy = y - cy;
     const dist = Math.hypot(dx, dy);
     
-    if (dist < inner - 10 || dist > outer + 18) return null;
+    // Looser hit detection for edges
+    if (dist < inner - 20 || dist > outer + 30) return null;
     return Math.atan2(dy, dx);
   };
+
+  const { updateDb } = useAppStore();
 
   const angleToMin = (ang: number) => {
     let a = ang - (-Math.PI / 2);
     while (a < 0) a += Math.PI * 2;
     while (a >= Math.PI * 2) a -= Math.PI * 2;
     const min = Math.round((a / (Math.PI * 2)) * 1440);
-    return Math.round(min / 5) * 5;
+    return Math.round(min / 5) * 5; // Snap to 5 minutes
   };
 
   const handlePointerDown = (e: React.MouseEvent | React.TouchEvent) => {
@@ -254,12 +260,44 @@ export function RingChart() {
     draggingRef.current = true;
     const min = angleToMin(ang);
     dragStartRef.current = min;
-    
-    // Check if clicking on an existing segment
-    const hitIndex = acts.findIndex(seg => min >= seg.startMin && min <= seg.endMin);
-    dragHitIndexRef.current = hitIndex;
 
-    setDragPreview({ startMin: min, endMin: min });
+    let hitIndex = -1;
+    let dragMode: DragAction = 'create';
+    let originalAct = null;
+
+    // Search backwards to hit topmost drawn items
+    for (let i = acts.length - 1; i >= 0; i--) {
+      const seg = acts[i];
+      // Check if min falls within segment boundaries with a small tolerance
+      if (min >= seg.startMin - 15 && min <= seg.endMin + 15) {
+        hitIndex = i;
+        originalAct = seg;
+        const distStart = Math.abs(min - seg.startMin);
+        const distEnd = Math.abs(min - seg.endMin);
+        const dur = seg.endMin - seg.startMin;
+        
+        const edgeThreshold = Math.min(20, dur / 3); // Dynamic edge area
+        
+        if (distStart <= edgeThreshold && distStart <= distEnd) {
+          dragMode = 'resize-start';
+        } else if (distEnd <= edgeThreshold) {
+          dragMode = 'resize-end';
+        } else {
+          dragMode = 'move';
+        }
+        break;
+      }
+    }
+
+    dragHitIndexRef.current = hitIndex;
+    dragModeRef.current = dragMode;
+    dragOriginalActRef.current = originalAct;
+
+    if (dragMode === 'create') {
+      setDragPreview({ startMin: min, endMin: min });
+    } else if (originalAct) {
+      setDragPreview({ startMin: originalAct.startMin, endMin: originalAct.endMin });
+    }
   };
 
   useEffect(() => {
@@ -267,9 +305,40 @@ export function RingChart() {
       if (!draggingRef.current || dragStartRef.current == null) return;
       const ang = getAngle(e);
       if (ang == null) return;
+      
       const min = angleToMin(ang);
-      const s = Math.min(dragStartRef.current, min);
-      const end = Math.max(dragStartRef.current, min);
+      const mode = dragModeRef.current;
+      const originalAct = dragOriginalActRef.current;
+      
+      let s = 0, end = 0;
+
+      if (mode === 'create') {
+        s = Math.min(dragStartRef.current, min);
+        end = Math.max(dragStartRef.current, min);
+      } else if (originalAct) {
+        if (mode === 'resize-start') {
+          s = Math.min(min, originalAct.endMin - 5); // Prevent negative duration
+          end = originalAct.endMin;
+        } else if (mode === 'resize-end') {
+          s = originalAct.startMin;
+          end = Math.max(min, originalAct.startMin + 5);
+        } else if (mode === 'move') {
+          const offset = min - dragStartRef.current;
+          const dur = originalAct.endMin - originalAct.startMin;
+          s = originalAct.startMin + offset;
+          end = s + dur;
+          
+          // Clamp to stay within 24h
+          if (s < 0) {
+            s = 0;
+            end = dur;
+          } else if (end > 1440) {
+            end = 1440;
+            s = 1440 - dur;
+          }
+        }
+      }
+      
       setDragPreview({ startMin: s, endMin: end });
     };
 
@@ -277,27 +346,102 @@ export function RingChart() {
       if (!draggingRef.current) return;
       draggingRef.current = false;
       
-      let s = dragPreview?.startMin || dragStartRef.current || 0;
-      let end = dragPreview?.endMin || dragStartRef.current || 0;
-      
-      if (Math.abs(end - s) < 5) {
-        if (dragHitIndexRef.current !== -1) {
-          const act = acts[dragHitIndexRef.current];
-          setDragPreview(null);
-          setSelectedRange({ startMin: act.startMin, endMin: act.endMin });
-          setEditingIndex(dragHitIndexRef.current);
-          setModalOpen(true);
-          return;
+      // Determine click vs drag
+      let isClick = true;
+      if (dragStartRef.current != null) {
+        const ang = getAngle(e);
+        if (ang != null) {
+          const min = angleToMin(ang);
+          if (Math.abs(min - dragStartRef.current) > 10) {
+            isClick = false;
+          }
+        } else if (dragPreview) { // Pointer left canvas but still dragged
+          const movedStart = Math.abs(dragPreview.startMin - (dragOriginalActRef.current?.startMin || dragStartRef.current));
+          const movedEnd = Math.abs(dragPreview.endMin - (dragOriginalActRef.current?.endMin || dragStartRef.current));
+          if (movedStart > 10 || movedEnd > 10) isClick = false;
+        }
+      }
+
+      if (isClick && dragHitIndexRef.current !== -1) {
+        // It's a click on an existing segment
+        const act = acts[dragHitIndexRef.current];
+        setDragPreview(null);
+        setSelectedRange({ startMin: act.startMin, endMin: act.endMin });
+        setEditingIndex(dragHitIndexRef.current);
+        setModalOpen(true);
+        return;
+      }
+
+      if (isClick && dragHitIndexRef.current === -1) {
+        // Clicked empty space
+        let s = dragStartRef.current || 0;
+        let end = clamp(s + 30, 0, 1440);
+        setDragPreview(null);
+        setSelectedRange({ startMin: s, endMin: end });
+        setEditingIndex(null);
+        setModalOpen(true);
+        return;
+      }
+
+      // It was a drag!
+      if (dragPreview && dragOriginalActRef.current && dragModeRef.current !== 'create') {
+        const actingAct = dragOriginalActRef.current;
+        const newDb = JSON.parse(JSON.stringify(db)); // Deep copy using util inside? No we can't deep copy whole DB if functions are there. Actually wait, db is JSON serializable.
+        // Let's manually apply update
+        
+        let todaysData = newDb.days[dateKey];
+        if (!todaysData) {
+          todaysData = {
+            activities: [],
+            pomodoro: { morning: 0, noon: 0, evening: 0 },
+            sleep: { wake: "08:00", bed: "23:00" },
+            diary: { title: "", text: "", mood: 3, tags: [], updatedAt: Date.now() }
+          };
+          newDb.days[dateKey] = todaysData;
         }
 
-        s = dragStartRef.current || 0;
-        end = clamp(s + 30, 0, 1440);
+        const newActs = [...todaysData.activities];
+
+        const seg: ActivitySegment = { 
+          ...actingAct,
+          startMin: dragPreview.startMin,
+          endMin: dragPreview.endMin
+        };
+
+        if (actingAct.isRecurring) {
+          // If it was a recurring task from global, we must create an override instance 
+          // because drag-and-drop on RingChart modifies ONLY the current day's instance.
+          const normIdx = newActs.findIndex((a: ActivitySegment) => a.id === actingAct.id || (a.startMin === actingAct.startMin && a.endMin === actingAct.endMin && a.label === actingAct.label));
+          if (normIdx >= 0) {
+            newActs[normIdx] = seg;
+          } else {
+            // Give the override an ID representing this specific day if missing? No, segId is fine
+            seg.id = seg.id || Math.random().toString(36).substring(2, 9);
+            newActs.push(seg);
+          }
+        } else {
+          // Update normal task
+          const normIdx = newActs.findIndex((a: ActivitySegment) => a.id === actingAct.id || (a.startMin === actingAct.startMin && a.endMin === actingAct.endMin && a.label === actingAct.label));
+          if(normIdx >= 0) newActs[normIdx] = seg;
+          else newActs.push(seg);
+        }
+        
+        newDb.days[dateKey].activities = newActs;
+        updateDb(newDb);
+        setDragPreview(null);
+        return;
       }
-      
+
+      // If it was a create drag
+      if (dragPreview && dragModeRef.current === 'create') {
+        setDragPreview(null);
+        setSelectedRange({ startMin: dragPreview.startMin, endMin: dragPreview.endMin });
+        setEditingIndex(null);
+        setModalOpen(true);
+        return;
+      }
+
       setDragPreview(null);
-      setSelectedRange({ startMin: s, endMin: end });
-      setEditingIndex(null);
-      setModalOpen(true);
     };
 
     window.addEventListener('mousemove', handleMove);
@@ -311,7 +455,8 @@ export function RingChart() {
       window.removeEventListener('touchmove', handleMove);
       window.removeEventListener('touchend', handleUp);
     };
-  }, [dragPreview]);
+  }, [dragPreview, db, dateKey, updateDb, acts]); // acts is needed for hit tests? acts changes draw so it's fresh.
+
 
   return (
     <div className="w-full flex items-center justify-center relative touch-none" ref={containerRef}>

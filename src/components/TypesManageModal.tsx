@@ -28,7 +28,7 @@ export function TypesManageModal({ onClose }: TypesManageModalProps) {
     if (exists && !confirm("已有同名类型，仍要创建吗？")) return;
     
     const id = "t_" + Math.random().toString(16).slice(2) + Date.now().toString(16);
-    const newDb = { ...db };
+    const newDb = JSON.parse(JSON.stringify(db));
     // Put new type after uncat to match the list appearance
     newDb.taskTypes.list.push({ id, name: newTypeName.trim(), color: newTypeColor, created: ymd(new Date()) });
     updateDb(newDb);
@@ -37,7 +37,7 @@ export function TypesManageModal({ onClose }: TypesManageModalProps) {
   };
 
   const handleUpdateColor = (id: string, color: string) => {
-    const newDb = { ...db };
+    const newDb = JSON.parse(JSON.stringify(db));
     const t = newDb.taskTypes.list.find((x: any) => x.id === id);
     if (t) {
       t.color = color;
@@ -46,7 +46,7 @@ export function TypesManageModal({ onClose }: TypesManageModalProps) {
   };
 
   const handleUpdateName = (id: string, name: string) => {
-    const newDb = { ...db };
+    const newDb = JSON.parse(JSON.stringify(db));
     const t = newDb.taskTypes.list.find((x: any) => x.id === id);
     if (t) {
       t.name = name;
@@ -58,7 +58,7 @@ export function TypesManageModal({ onClose }: TypesManageModalProps) {
     if (id === 'uncat') return alert("不能删除默认分类");
     if (!confirm("确定要删除这个分类吗？这会将使用此分类的活动变更为“未分类”。")) return;
 
-    const newDb = { ...db };
+    const newDb = JSON.parse(JSON.stringify(db));
     newDb.taskTypes.list = newDb.taskTypes.list.filter((x: any) => x.id !== id);
     
     // Change all activities to 'uncat'
