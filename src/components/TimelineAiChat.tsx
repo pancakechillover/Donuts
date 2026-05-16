@@ -194,8 +194,13 @@ ${typesInfo}
       });
 
       if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "请求失败");
+        const text = await res.text();
+        try {
+          const err = JSON.parse(text);
+          throw new Error(err.error || "请求失败");
+        } catch {
+          throw new Error("请求失败: " + text.slice(0, 100));
+        }
       }
 
       if (!res.body) throw new Error("No response body");
@@ -264,7 +269,8 @@ ${typesInfo}
       const jsonStr = extractJson(assistantText);
       if (jsonStr) {
         try {
-          const tasks = JSON.parse(jsonStr).filter((t: any) => t.startMin !== undefined);
+          const tasksArr = JSON.parse(jsonStr);
+          const tasks = Array.isArray(tasksArr) ? tasksArr.filter((t: any) => t && t.startMin !== undefined) : [];
           if (tasks.length > 0) {
             const normalizedTasks: PendingTask[] = tasks.map((t: any) => ({
               id: Math.random().toString(36).substring(2, 9),
@@ -523,7 +529,7 @@ ${typesInfo}
                          <div key={idx} className="flex flex-wrap gap-2 items-center bg-[var(--panel)] p-2 rounded border border-[var(--line)] text-xs">
                            <input 
                              className="flex-1 min-w-[80px] bg-transparent outline-none border-b border-transparent focus:border-[var(--accent)]" 
-                             value={t.label} 
+                             value={t.label || ""} 
                              onChange={e => updatePendingTask(idx, { label: e.target.value })}
                              placeholder="任务名称"
                            />
@@ -539,8 +545,8 @@ ${typesInfo}
                              )}
                              <div className="flex items-center gap-1 text-[var(--muted)]">
                                <input 
-                                 className="w-10 bg-transparent text-center outline-none" 
-                                 value={minToTime(t.startMin)} 
+                                 className="w-12 bg-transparent text-center outline-none border-[var(--line)] border border-transparent hover:border-[var(--line)] rounded" 
+                                 value={minToTime(t.startMin || 0).replace("NaN:NaN", "00:00")} 
                                  onChange={e => {
                                    const m = timeToMin(e.target.value);
                                    if (m !== null) updatePendingTask(idx, { startMin: m });
@@ -548,8 +554,8 @@ ${typesInfo}
                                />
                                <span>-</span>
                                <input 
-                                 className="w-10 bg-transparent text-center outline-none" 
-                                 value={minToTime(t.endMin)} 
+                                 className="w-12 bg-transparent text-center outline-none border-[var(--line)] border border-transparent hover:border-[var(--line)] rounded" 
+                                 value={minToTime(t.endMin || 0).replace("NaN:NaN", "00:00")} 
                                  onChange={e => {
                                    const m = timeToMin(e.target.value);
                                    if (m !== null) updatePendingTask(idx, { endMin: m });

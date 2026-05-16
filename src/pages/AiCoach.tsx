@@ -133,8 +133,13 @@ export function AiCoach() {
       });
 
       if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "请求失败");
+        const text = await res.text();
+        try {
+          const err = JSON.parse(text);
+          throw new Error(err.error || "请求失败");
+        } catch {
+          throw new Error("请求失败: " + text.slice(0, 100));
+        }
       }
 
       if (!res.body) throw new Error("No response body");
