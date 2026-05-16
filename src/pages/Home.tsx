@@ -3,6 +3,7 @@ import { useAppStore } from '../lib/store';
 import { Button } from '../components/ui/Button';
 import { ymd, fmtMinRange, fmtDuration, minToTime, timeToMin, clamp } from '../lib/utils';
 import { RingChart } from '../components/RingChart';
+import { TimelineAiChat } from '../components/TimelineAiChat';
 import { CalendarPanel } from '../components/CalendarPanel';
 import { TimelineSettingsModal } from '../components/TimelineSettingsModal';
 import { Settings, Repeat, Sun, Clock, Moon } from 'lucide-react';
@@ -84,28 +85,33 @@ export function HomeScreen() {
     <div className="grid gap-3.5 mt-4">
       <div className="grid md:grid-cols-[520px_1fr] gap-3.5 items-start">
         
-        {/* Ring Panel */}
-        <div className="bg-[var(--panel)] border border-[var(--line)] rounded-[var(--radius)] shadow-[var(--shadow)] overflow-hidden">
-          <div className="flex items-center justify-between p-3 border-b border-[color-mix(in_srgb,var(--line)_85%,transparent)] bg-[color-mix(in_srgb,var(--panel2)_65%,transparent)] flex-wrap gap-2.5">
-            <h2 className="m-0 text-[13px] font-bold">24 小时环形时间（可点击/拖动）</h2>
-            <div className="flex gap-2.5 items-center">
-              <Button onClick={handleToday}>回到今天</Button>
+        {/* Left Stack */}
+        <div className="flex flex-col gap-3.5">
+          {/* Ring Panel */}
+          <div className="bg-[var(--panel)] border border-[var(--line)] rounded-[var(--radius)] shadow-[var(--shadow)] overflow-hidden">
+            <div className="flex items-center justify-between p-3 border-b border-[color-mix(in_srgb,var(--line)_85%,transparent)] bg-[color-mix(in_srgb,var(--panel2)_65%,transparent)] flex-wrap gap-2.5">
+              <h2 className="m-0 text-[13px] font-bold">24 小时环形时间（可点击/拖动）</h2>
+              <div className="flex gap-2.5 items-center">
+                <Button onClick={handleToday}>回到今天</Button>
+              </div>
+            </div>
+            <div className="p-3.5">
+              <RingChart />
+              <div className="mt-4 flex flex-wrap gap-2">
+                {db.taskTypes.list.map((type: any) => (
+                  <div key={type.id} className="flex items-center gap-1.5 px-2 py-1 rounded-md text-xs border border-[var(--line)] bg-[var(--panel2)]">
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: type.color }}></div>
+                    <span>{type.name}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="text-[11px] text-[var(--muted)] mt-2.5">
+                 操作：在环上按下并拖动选择时间段；点击已有色块可编辑；松开填写“做了什么”和类型。
+              </div>
             </div>
           </div>
-          <div className="p-3.5">
-            <RingChart />
-            <div className="mt-4 flex flex-wrap gap-2">
-              {db.taskTypes.list.map((type: any) => (
-                <div key={type.id} className="flex items-center gap-1.5 px-2 py-1 rounded-md text-xs border border-[var(--line)] bg-[var(--panel2)]">
-                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: type.color }}></div>
-                  <span>{type.name}</span>
-                </div>
-              ))}
-            </div>
-            <div className="text-[11px] text-[var(--muted)] mt-2.5">
-               操作：在环上按下并拖动选择时间段；点击已有色块可编辑；松开填写“做了什么”和类型。
-            </div>
-          </div>
+          
+          <TimelineAiChat dateKey={dateKey} />
         </div>
 
         {/* Right Stack */}
