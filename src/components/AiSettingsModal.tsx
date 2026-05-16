@@ -10,10 +10,9 @@ interface SettingsModalProps {
 }
 
 const GEMINI_MODELS = [
-  "gemini-2.5-flash",
-  "gemini-2.5-pro",
-  "gemini-1.5-flash",
-  "gemini-1.5-pro"
+  "gemini-3.1-flash-lite",
+  "gemini-3-flash-preview",
+  "gemini-3.1-pro-preview"
 ];
 
 export function SettingsModal({ onClose }: SettingsModalProps) {
@@ -22,10 +21,11 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
 
   const [provider, setProvider] = useState<'gemini' | 'openai-compatible'>(config.provider || 'gemini');
   const [apiKey, setApiKey] = useState(config.apiKey || "");
-  const [model, setModel] = useState(config.model || "gemini-2.5-flash");
+  const [model, setModel] = useState(config.model || "gemini-3-flash-preview");
   const [personaId, setPersonaId] = useState(config.personaId || "p1");
   const [baseUrl, setBaseUrl] = useState(config.baseUrl || "https://api.deepseek.com/v1");
   const [quickPromptsText, setQuickPromptsText] = useState((config.quickPrompts || DEFAULT_PROMPTS).join('\n'));
+  const [skipAiDoubleCheck, setSkipAiDoubleCheck] = useState(config.skipAiDoubleCheck || false);
   
   const customPersonas = config.customPersonas || DEFAULT_PERSONAS;
 
@@ -37,7 +37,7 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
     // Maintain old string fallback for existing views
     const activePersonaName = customPersonas.find(p => p.id === personaId)?.name || '未知';
     const quickPrompts = quickPromptsText.split('\n').map(l => l.trim()).filter(Boolean);
-    newDb.aiChats.config = { ...config, provider, apiKey, model, personaId, persona: activePersonaName, baseUrl, quickPrompts };
+    newDb.aiChats.config = { ...config, provider, apiKey, model, personaId, persona: activePersonaName, baseUrl, quickPrompts, skipAiDoubleCheck };
     updateDb(newDb);
     onClose();
   };
@@ -123,7 +123,7 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
                const val = e.target.value as any;
                setProvider(val);
                if (val === 'gemini') {
-                 setModel('gemini-2.5-flash');
+                 setModel('gemini-3-flash-preview');
                } else {
                  setModel('deepseek-chat');
                }
@@ -159,6 +159,21 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
             value={apiKey}
             onChange={e => setApiKey(e.target.value)}
           />
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-bold flex items-center gap-2 cursor-pointer">
+            <input 
+              type="checkbox" 
+              className="w-4 h-4 rounded border-[var(--line)] bg-[var(--panel2)] text-[var(--accent)]"
+              checked={skipAiDoubleCheck}
+              onChange={e => setSkipAiDoubleCheck(e.target.checked)}
+            />
+            <span>AI 自动记录 (跳过二次确认)</span>
+          </label>
+          <div className="text-xs text-[var(--muted)] ml-6">
+            开启后，AI 识别到任务会直接加入时间环。关闭时，AI 会先展示解析出的任务供您确认或修改。
+          </div>
         </div>
 
         <div className="flex flex-col gap-1">

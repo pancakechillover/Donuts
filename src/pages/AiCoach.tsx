@@ -168,6 +168,9 @@ export function AiCoach() {
                }
                try {
                  const parsed = JSON.parse(jsonStr);
+                 if (parsed.error) {
+                    throw new Error(parsed.error);
+                 }
                  if (parsed.text) {
                    assistantText += parsed.text;
                    updateSessionMessages(currentSession!.id, [
@@ -255,7 +258,7 @@ export function AiCoach() {
                   <div className="whitespace-pre-wrap text-sm">{m.text}</div>
                 ) : (
                   <div className="markdown-body text-sm">
-                    <Markdown>{m.text}</Markdown>
+                    <Markdown>{m.text.replace(/```json[\s\S]*?```/g, "").trim()}</Markdown>
                   </div>
                 )}
               </div>

@@ -49,6 +49,11 @@ export interface Habit {
   created: string; // YYYY-MM-DD
 }
 
+export interface PendingTask extends ActivitySegment {
+  targetDate: string;
+  frequency?: 'daily' | 'weekly' | 'monthly' | 'yearly';
+}
+
 export interface ChatMessage {
   role: 'user' | 'model';
   text: string;
@@ -59,6 +64,7 @@ export interface ChatSession {
   title: string;
   messages: ChatMessage[];
   updatedAt: number;
+  pendingTasks?: PendingTask[];
 }
 
 export interface AiPersona {
@@ -77,6 +83,7 @@ export interface AiConfig {
   provider: 'gemini' | 'openai-compatible';
   baseUrl?: string;
   quickPrompts?: string[];
+  skipAiDoubleCheck?: boolean;
 }
 
 export interface TimelineConfig {
@@ -113,6 +120,10 @@ export interface Database {
     sessions: ChatSession[];
     activeSessionId: string | null;
     config: AiConfig;
+  };
+  aiTimeChats?: {
+    sessions: ChatSession[];
+    activeSessionId: string | null;
   };
   settings?: {
     timeline: TimelineConfig;

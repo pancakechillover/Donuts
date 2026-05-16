@@ -29,10 +29,10 @@ function AppContent() {
   const isFuture = selectedDate > new Date(new Date().setHours(23, 59, 59, 999));
   
   const logoClasses = [
-    "flex items-center justify-center w-[34px] h-[34px] rounded-xl font-semibold text-[13px] text-white shadow-[var(--shadow)] relative overflow-hidden flex-shrink-0",
-    isToday && "bg-gradient-to-br from-[#7aa2ff] to-[#a78bfa] shadow-[0_0_0_3px_#7aa2ff44]",
-    !isToday && !isFuture && "bg-gradient-to-br from-[#ff6b6b] to-[#ffcc66] shadow-[0_0_0_3px_#ff6b6b44]",
-    !isToday && isFuture && "bg-gradient-to-br from-[#2563eb] to-[#60a5fa] shadow-[0_0_0_3px_#2563eb44]"
+    "flex items-center justify-center w-9 h-9 rounded-xl font-bold text-sm text-white shadow-lg relative overflow-hidden flex-shrink-0 transition-all duration-300 transform hover:scale-105",
+    isToday && "bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] ring-4 ring-[#6366f1]/20",
+    !isToday && !isFuture && "bg-gradient-to-br from-[#f43f5e] to-[#fb923c] ring-4 ring-[#f43f5e]/20",
+    !isToday && isFuture && "bg-gradient-to-br from-[#0ea5e9] to-[#2dd4bf] ring-4 ring-[#0ea5e9]/20"
   ].filter(Boolean).join(" ");
 
   const tabs = [
@@ -47,53 +47,85 @@ function AppContent() {
 
   return (
     <div className="min-h-screen pb-20 md:pb-0">
-      {/* Top Header - hidden on mobile, visible on desktop */}
-      <header className="sticky top-0 z-20 backdrop-blur-[14px] bg-[color-mix(in_srgb,var(--bg)_70%,transparent)] border-b border-[color-mix(in_srgb,var(--line)_90%,transparent)]">
-        <div className="max-w-[1280px] mx-auto px-3.5 py-3 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <div className={logoClasses}>{selectedDate.getDate()}号</div>
-            <div>
-              <h1 className="text-sm m-0 tracking-wide font-bold">TimeDonut</h1>
-              <div className="text-xs text-[var(--muted)]">
-                {isToday ? `今日：${selYMD}` : isFuture ? `未来：${selYMD}` : `历史：${selYMD}`}
+      {/* Top Header */}
+      <header className="sticky top-0 z-30 backdrop-blur-xl bg-[var(--bg)]/70 border-b border-[var(--line)] transition-all duration-300">
+        <div className="max-w-[1400px] mx-auto px-4 py-3 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 group cursor-pointer" onClick={() => setActiveTab('home')}>
+            <div className={logoClasses}>
+              <span className="relative z-10">{selectedDate.getDate()}</span>
+              <div className="absolute inset-0 bg-white/10 group-hover:bg-white/20 transition-colors" />
+            </div>
+            <div className="hidden sm:block">
+              <h1 className="text-base m-0 tracking-tight font-black bg-gradient-to-r from-[var(--text)] to-[var(--muted)] bg-clip-text text-transparent">TimeDonut</h1>
+              <div className="text-[10px] font-medium tracking-widest uppercase opacity-60">
+                {isToday ? `TODAY · ${selYMD}` : isFuture ? `FUTURE · ${selYMD}` : `PAST · ${selYMD}`}
               </div>
             </div>
           </div>
           
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-2 justify-end flex-wrap">
+          <nav className="hidden lg:flex items-center p-1 bg-[var(--panel2)]/50 rounded-2xl border border-[var(--line)] gap-1">
             {tabs.map(tab => {
               const isActive = activeTab === tab.id;
               return (
                 <div
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`border px-3 py-1.5 rounded-full cursor-pointer text-xs select-none flex items-center gap-1.5 transition-all duration-150
+                  className={`relative px-4 py-1.5 rounded-xl cursor-pointer text-xs font-semibold select-none flex items-center gap-2 transition-all duration-200
                     ${isActive 
-                      ? 'border-[color-mix(in_srgb,var(--accent)_58%,var(--line))] bg-[color-mix(in_srgb,var(--accent)_14%,var(--panel2))] text-[var(--accent)]' 
-                      : 'border-[var(--line)] bg-[color-mix(in_srgb,var(--panel2)_60%,transparent)] hover:bg-[color-mix(in_srgb,var(--panel2)_82%,transparent)]'
+                      ? 'text-[var(--accent)]' 
+                      : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--panel2)]'
                     }`}
                 >
-                  <tab.icon className="w-3.5 h-3.5" />
-                  {tab.label}
+                  {isActive && (
+                    <motion.div
+                      layoutId="header-active-pill"
+                      className="absolute inset-0 bg-[var(--bg)] shadow-sm rounded-xl border border-[var(--line)]"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
+                    />
+                  )}
+                  <tab.icon className={`w-3.5 h-3.5 relative z-10 ${isActive ? 'text-[var(--accent)]' : ''}`} />
+                  <span className="relative z-10">{tab.label}</span>
                 </div>
               );
             })}
-            <Button onClick={() => setDataModalOpen(true)} title="数据导入/导出与存档"><Database className="w-3.5 h-3.5" /> 数据</Button>
-            <Button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} title="切换日间/夜间">
-              {theme === 'light' ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
-              {theme === 'light' ? ' 夜间' : ' 日间'}
-            </Button>
           </nav>
           
-          {/* Mobile Actions: Data & Theme */}
-          <div className="flex md:hidden items-center gap-2">
-            <button onClick={() => setDataModalOpen(true)} className="p-2 border border-[var(--line)] rounded-md shadow-sm">
-              <Settings className="w-4 h-4" />
-            </button>
-            <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="p-2 border border-[var(--line)] rounded-md shadow-sm">
-              {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-            </button>
+          <div className="flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-1.5 pr-2 mr-2 border-r border-[var(--line)]">
+              <Button 
+                variant="ghost" 
+                onClick={() => setDataModalOpen(true)} 
+                className="h-8 px-2.5 text-xs opacity-70 hover:opacity-100"
+              >
+                <Database className="w-3.5 h-3.5" />
+                <span className="hidden xl:inline">存档</span>
+              </Button>
+              <Button 
+                variant="ghost" 
+                onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} 
+                className="h-8 px-2.5 text-xs opacity-70 hover:opacity-100"
+              >
+                {theme === 'light' ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
+                <span className="hidden xl:inline">{theme === 'light' ? '夜间' : '日间'}</span>
+              </Button>
+            </div>
+
+            {/* Mobile Actions */}
+            <div className="flex lg:hidden items-center gap-1">
+              <button 
+                onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} 
+                className="p-2 text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--panel2)] rounded-lg transition-colors"
+              >
+                {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+              </button>
+              <button 
+                onClick={() => setDataModalOpen(true)} 
+                className="p-2 text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--panel2)] rounded-lg transition-colors"
+              >
+                <Settings className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
       </header>

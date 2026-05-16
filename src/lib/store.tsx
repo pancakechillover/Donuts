@@ -55,7 +55,7 @@ function getDefaultDb(): Database {
     aiChats: {
       sessions: [],
       activeSessionId: null,
-      config: { apiKey: '', model: 'gemini-2.5-flash', persona: '', personaId: 'p1', customPersonas: DEFAULT_PERSONAS, provider: 'gemini', quickPrompts: DEFAULT_PROMPTS }
+      config: { apiKey: '', model: 'gemini-3-flash-preview', persona: '', personaId: 'p1', customPersonas: DEFAULT_PERSONAS, provider: 'gemini', quickPrompts: DEFAULT_PROMPTS, skipAiDoubleCheck: false }
     },
     settings: {
       timeline: {
@@ -78,6 +78,12 @@ function loadDB(): Database {
     parsed.taskTypes ||= { list: [] };
     parsed.recurringTasks ||= { list: [] };
     parsed.aiChats ||= getDefaultDb().aiChats;
+    
+    // Model Migration: Ensure we use valid models from the gemini-api skill
+    const VALID_GEMINI_MODELS = ["gemini-3.1-flash-lite", "gemini-3-flash-preview", "gemini-3.1-pro-preview", "gemini-flash-latest"];
+    if (parsed.aiChats.config.provider === 'gemini' && !VALID_GEMINI_MODELS.includes(parsed.aiChats.config.model)) {
+      parsed.aiChats.config.model = 'gemini-3-flash-preview';
+    }
     
     if (!parsed.settings) {
       parsed.settings = getDefaultDb().settings;

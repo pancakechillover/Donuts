@@ -96,9 +96,17 @@ async function startServer() {
          return;
       }
       
-      const ai = new GoogleGenAI({ apiKey: genAiApiKey });
+      const ai = new GoogleGenAI({ 
+        apiKey: genAiApiKey,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build',
+          }
+        }
+      });
+
       const responseStream = await ai.models.generateContentStream({
-        model: model || 'gemini-2.5-flash',
+        model: model || 'gemini-3-flash-preview',
         contents: messages,
         config: {
           systemInstruction: systemInstruction,
@@ -118,9 +126,23 @@ async function startServer() {
       res.end();
     } catch(err: any) {
       console.error(err);
+      
+      let clientErrorMessage = err.message || "Failed to generate chat response.";
+      
+      // Skill recommendation for 429 errors
+      if (err.status === 429 || (err.message && err.message.includes("RESOURCE_EXHAUSTED"))) {
+        clientErrorMessage = "AI 额度已用尽 (RESOURCE_EXHAUSTED)。如果您使用的是免费版 API Key，可以尝试在 “设置 > AI 教练设置” 中选择其他模型，或者稍后再试。升级到付费版可以获得更高额度。";
+      } else if (err.status === 403 || (err.message && (err.message.includes("PERMISSION_DENIED") || err.message.includes("API_KEY_INVALID")))) {
+        clientErrorMessage = "API Key 校验失败或权限不足。请在 “设置 > AI 教练设置” 中检查您的 API Key 是否正确。";
+      }
+
       if (!res.headersSent) {
-        res.status(500).json({ error: err.message || "Failed to generate chat response." });
+        res.status(err.status || 500).json({ error: clientErrorMessage });
       } else {
+        // If streaming, we might need to send the error as a data chunk before ending
+        try {
+          res.write(`data: ${JSON.stringify({ error: clientErrorMessage })}\n\n`);
+        } catch(e) {}
         res.end();
       }
     }

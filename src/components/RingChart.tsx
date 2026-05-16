@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react'
 import { useAppStore } from '../lib/store';
 import { ymd, clamp } from '../lib/utils';
 import { ActivityModal } from './ActivityModal';
+import { ActivitySegment } from '../lib/types';
 
 interface SegmentInfo {
   startMin: number;
