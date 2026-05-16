@@ -55,77 +55,60 @@ function AppContent() {
               <span className="relative z-10">{selectedDate.getDate()}</span>
               <div className="absolute inset-0 bg-white/10 group-hover:bg-white/20 transition-colors" />
             </div>
-            <div className="hidden sm:block">
-              <h1 className="text-base m-0 tracking-tight font-black bg-gradient-to-r from-[var(--text)] to-[var(--muted)] bg-clip-text text-transparent">TimeDonut</h1>
-              <div className="text-[10px] font-medium tracking-widest uppercase opacity-60">
+            <div className="hidden md:block">
+              <h1 className="text-[15px] m-0 tracking-tight font-black bg-gradient-to-r from-[var(--text)] to-[var(--muted)] bg-clip-text text-transparent">TimeDonut</h1>
+              <div className="text-[9px] font-medium tracking-widest uppercase opacity-60">
                 {isToday ? `TODAY · ${selYMD}` : isFuture ? `FUTURE · ${selYMD}` : `PAST · ${selYMD}`}
               </div>
             </div>
           </div>
           
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center p-1 bg-[var(--panel2)]/50 rounded-2xl border border-[var(--line)] gap-1">
+          <nav className="hidden sm:flex items-center p-1 bg-[var(--panel2)]/60 rounded-xl border border-[var(--line)] gap-0.5 shadow-sm">
             {tabs.map(tab => {
               const isActive = activeTab === tab.id;
               return (
                 <div
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`relative px-4 py-1.5 rounded-xl cursor-pointer text-xs font-semibold select-none flex items-center gap-2 transition-all duration-200
+                  className={`relative px-3 py-1.5 rounded-lg cursor-pointer text-[13px] font-medium select-none flex items-center gap-1.5 transition-all duration-200
                     ${isActive 
-                      ? 'text-[var(--accent)]' 
-                      : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--panel2)]'
+                      ? 'text-[var(--text)]' 
+                      : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--line)]/50'
                     }`}
                 >
                   {isActive && (
                     <motion.div
                       layoutId="header-active-pill"
-                      className="absolute inset-0 bg-[var(--bg)] shadow-sm rounded-xl border border-[var(--line)]"
-                      transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
+                      className="absolute inset-0 bg-[var(--bg)] shadow border border-[var(--line)] rounded-lg"
+                      transition={{ type: "spring", bounce: 0.25, duration: 0.5 }}
                     />
                   )}
-                  <tab.icon className={`w-3.5 h-3.5 relative z-10 ${isActive ? 'text-[var(--accent)]' : ''}`} />
-                  <span className="relative z-10">{tab.label}</span>
+                  <tab.icon className={`w-[14px] h-[14px] relative z-10 ${isActive ? 'text-[var(--accent)]' : ''}`} />
+                  <span className="relative z-10 hidden lg:inline">{tab.label}</span>
                 </div>
               );
             })}
           </nav>
           
-          <div className="flex items-center gap-2">
-            <div className="hidden md:flex items-center gap-1.5 pr-2 mr-2 border-r border-[var(--line)]">
-              <Button 
-                variant="ghost" 
+          <div className="flex items-center">
+            {/* Actions */}
+            <nav className="flex items-center p-1 bg-[var(--panel2)]/60 rounded-xl border border-[var(--line)] gap-0.5 shadow-sm">
+              <div 
                 onClick={() => setDataModalOpen(true)} 
-                className="h-8 px-2.5 text-xs opacity-70 hover:opacity-100"
+                className="relative px-3 py-1.5 rounded-lg cursor-pointer text-[13px] font-medium select-none flex items-center gap-1.5 transition-all duration-200 text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--line)]/50"
               >
-                <Database className="w-3.5 h-3.5" />
-                <span className="hidden xl:inline">存档</span>
-              </Button>
-              <Button 
-                variant="ghost" 
+                <Database className="w-[14px] h-[14px] relative z-10" />
+                <span className="relative z-10 hidden xl:inline">存档</span>
+              </div>
+              <div 
                 onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} 
-                className="h-8 px-2.5 text-xs opacity-70 hover:opacity-100"
+                className="relative px-3 py-1.5 rounded-lg cursor-pointer text-[13px] font-medium select-none flex items-center gap-1.5 transition-all duration-200 text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--line)]/50"
               >
-                {theme === 'light' ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
-                <span className="hidden xl:inline">{theme === 'light' ? '夜间' : '日间'}</span>
-              </Button>
-            </div>
-
-            {/* Mobile Actions */}
-            <div className="flex lg:hidden items-center gap-1">
-              <button 
-                onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} 
-                className="p-2 text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--panel2)] rounded-lg transition-colors"
-              >
-                {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-              </button>
-              <button 
-                onClick={() => setDataModalOpen(true)} 
-                className="p-2 text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--panel2)] rounded-lg transition-colors"
-              >
-                <Settings className="w-4 h-4" />
-              </button>
-            </div>
+                {theme === 'light' ? <Moon className="w-[14px] h-[14px] relative z-10" /> : <Sun className="w-[14px] h-[14px] relative z-10" />}
+                <span className="relative z-10 hidden xl:inline">{theme === 'light' ? '夜间' : '日间'}</span>
+              </div>
+            </nav>
           </div>
         </div>
       </header>

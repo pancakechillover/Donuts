@@ -73,10 +73,13 @@ export function CalendarPanel() {
             </div>
             
             <div className="grid grid-cols-7 gap-1.5">
-              {cells.map((cell, idx) => (
+              {cells.map((cell, idx) => {
+                const ddlActs = cell.acts.filter(a => a.isDeadline);
+                const normalActs = cell.acts.filter(a => !a.isDeadline);
+                return (
                 <div 
                   key={idx} 
-                  className={`relative border border-[var(--line)] bg-[color-mix(in_srgb,var(--panel2)_62%,transparent)] rounded-xl p-1.5 flex flex-col gap-1.5 min-h-[56px] cursor-pointer select-none transition-all duration-150 hover:scale-[1.03] hover:z-10 hover:shadow-lg hover:border-[var(--accent)] active:scale-95 ${!cell.inMonth ? 'opacity-40 grayscale-[0.5]' : ''} ${cell.isSel ? 'border-[var(--accent)] bg-[color-mix(in_srgb,var(--accent)_12%,var(--panel2))] ring-2 ring-[var(--accent)] ring-opacity-20' : ''} ${cell.isToday ? 'outline outline-2 outline-[#46d39a66] outline-offset-1' : ''} ${cell.isDdl ? 'bg-red-50/50 dark:bg-red-950/20 border-red-300 dark:border-red-900/50 shadow-[inset_0_0_12px_rgba(239,68,68,0.05)]' : ''}`}
+                  className={`relative border border-[var(--line)] bg-[var(--panel2)]/60 rounded-xl p-1.5 flex flex-col gap-1 min-h-[64px] cursor-pointer select-none transition-all duration-150 hover:scale-[1.03] hover:z-10 hover:shadow-lg hover:border-[var(--accent)] active:scale-95 ${!cell.inMonth ? 'opacity-40 grayscale-[0.5]' : ''} ${cell.isSel ? 'border-[var(--accent)] bg-[var(--accent)]/10 ring-2 ring-[var(--accent)] ring-opacity-20' : ''} ${cell.isToday ? 'outline outline-2 outline-[#46d39a66] outline-offset-1' : ''} ${cell.isDdl ? 'bg-[color-mix(in_srgb,var(--panel),#ef4444_5%)] border-[color-mix(in_srgb,var(--panel),#ef4444_30%)] shadow-[inset_0_0_12px_rgba(239,68,68,0.1)]' : ''}`}
                   onClick={() => {
                     setSelectedDate(cell.cur);
                     if (!cell.inMonth) {
@@ -85,19 +88,36 @@ export function CalendarPanel() {
                   }}
                 >
                   <div className="flex justify-between items-start">
-                    <div className={`text-[11px] font-mono ${cell.isToday ? 'bg-[#46d39a] text-white px-1 rounded-sm' : (!cell.inMonth ? 'text-[#b3b9c9]' : 'text-[var(--text)]')}`}>
+                    <div className={`text-[11px] font-mono ${cell.isToday ? 'bg-[#46d39a] text-white px-1 rounded-sm' : (!cell.inMonth ? 'text-[var(--muted)] opacity-70' : 'text-[var(--text)]')}`}>
                       {cell.cur.getDate()}
                     </div>
-                    {cell.isDdl && <span className="w-1.5 h-1.5 mt-0.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]"></span>}
                   </div>
-                  <div className="flex flex-wrap gap-0.5 mt-auto">
-                    {cell.acts.map((act, actIdx) => {
-                      const c = db.taskTypes.list.find(t=>t.id===act.typeId)?.color || '#7aa2ff';
-                      return <span key={actIdx} className={`w-1.5 h-1.5 rounded-full ${act.isDeadline ? 'ring-1 ring-red-400 scale-125 z-1' : ''}`} style={{ background: act.isDeadline ? '#ef4444' : c }}></span>;
-                    })}
+                  
+                  {/* DDL task labels in the middle */}
+                  <div className="flex flex-col items-center justify-center flex-1 w-full gap-0.5 overflow-hidden my-0.5">
+                    {ddlActs.map((act, actIdx) => (
+                      <span 
+                        key={`ddl-${actIdx}`} 
+                        className="text-[10px] sm:text-[11px] leading-tight text-[#ef4444] font-bold px-1 rounded bg-[color-mix(in_srgb,var(--panel),#ef4444_15%)] border border-[#ef4444]/30 truncate w-full text-center shadow-sm"
+                        title={act.label}
+                      >
+                        {act.label.substring(0, 2)}
+                      </span>
+                    ))}
                   </div>
+
+                  {/* Normal act dots at the bottom */}
+                  {normalActs.length > 0 && (
+                    <div className="flex flex-wrap gap-0.5 mt-auto pt-0.5">
+                      {normalActs.map((act, actIdx) => {
+                        const c = db.taskTypes.list.find(t=>t.id===act.typeId)?.color || '#7aa2ff';
+                        return <span key={`norm-${actIdx}`} className="w-[5px] h-[5px] rounded-full" style={{ background: c }}></span>;
+                      })}
+                    </div>
+                  )}
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
